@@ -1,0 +1,29 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="140" y1="80" x2="900" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2b3452"/>
+      <stop offset="0.55" stop-color="#161a26"/>
+      <stop offset="1" stop-color="#0b0d14"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="220" y1="200" x2="820" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8aa2ff"/>
+      <stop offset="0.5" stop-color="#6c8cff"/>
+      <stop offset="1" stop-color="#43d6a0"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="512" y1="40" x2="512" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="32" y="32" width="960" height="960" rx="232" fill="url(#bg)"/>
+  <rect x="32" y="32" width="960" height="960" rx="232" fill="url(#glass)"/>
+  <rect x="42" y="42" width="940" height="940" rx="222" stroke="#ffffff" stroke-opacity="0.10" stroke-width="20"/>
+
+  <!-- Кольцо-таймер: r=300, дуга 310°, разрыв в правом верхнем секторе -->
+  <path d="M 589.6 222.2 A 300 300 0 1 0 783.9 385.2" stroke="url(#ring)" stroke-width="70" stroke-linecap="round" fill="none"/>
+
+  <!-- Буква f -->
+  <path d="M 470 706 L 470 432 C 470 352 532 316 610 340" stroke="#ffffff" stroke-width="76" stroke-linecap="round" fill="none"/>
+  <path d="M 396 512 L 594 512" stroke="#f5c451" stroke-width="70" stroke-linecap="round" fill="none"/>
+</svg>

@@ -1,0 +1,43 @@
+[package]
+name = "freel-mobile-tauri"
+version = "0.1.0"
+description = "Учёт времени и счетов для фриланса: десктоп и Android"
+authors = ["whostolemysleep"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "freel_mobile_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# `macos-private-api` backs the transparent edge panel; without it the config's
+# `macOSPrivateApi` flag fails the build.
+tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
+# Same 0.8.x the plugin resolves to, so its pool type is this crate's type and
+# the backup restore can open a real transaction on it.
+sqlx = { version = "0.8", features = ["sqlite"] }
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-timer = { version = "0.1.0", path = "../../tauri-plugin-timer" }
+tauri-plugin-dialog = "2.7.2"
+tauri-plugin-fs = "2.5.1"
+# Sync talks to the server from Rust: the round trip and the local apply then
+# share one transaction, and the webview never sees the token.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# Only for the auto-sync loop's timer; the runtime itself comes from Tauri.
+tokio = { version = "1", features = ["time"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+

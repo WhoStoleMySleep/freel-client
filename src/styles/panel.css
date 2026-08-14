@@ -1,0 +1,281 @@
+/*
+ * The edge panel. Its window is transparent and undecorated, so the surface,
+ * the rounded edge and the shadow all come from `.panel` itself.
+ */
+body.panel-window {
+  background: transparent;
+}
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  background: var(--screen);
+  border: 1px solid var(--border2);
+  /* Square against the screen edge, rounded on the side that shows. */
+  border-radius: 0 18px 18px 0;
+  border-left: none;
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: panel-in 0.18s ease;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+}
+.panel-brand {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.panel-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+  color: var(--dim);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- running timer ---- */
+.panel-timer {
+  flex: none;
+  background: linear-gradient(145deg, #242c44 0%, #161b28 55%, #10131c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 13px;
+}
+.panel-timer-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(243, 245, 249, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-timer-clock {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin: 2px 0 10px;
+}
+.panel-timer-btns {
+  display: flex;
+  gap: 8px;
+}
+.panel-btn {
+  flex: 1;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f5f9;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.panel-btn.danger {
+  border-color: rgba(255, 122, 122, 0.4);
+  color: var(--danger);
+}
+.panel-btn svg {
+  flex: none;
+}
+
+/* ---- quick add ---- */
+.panel-add {
+  flex: none;
+  display: flex;
+  gap: 8px;
+}
+.panel-input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.panel-input:focus {
+  border-color: var(--accent);
+}
+.panel-add-btn {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 19px;
+  line-height: 1;
+}
+.panel-add-btn:disabled {
+  opacity: 0.4;
+}
+.panel-select {
+  flex: none;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+/* ---- task list ---- */
+.panel-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.panel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.panel-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 2px 1px;
+}
+.panel-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+.panel-group-count {
+  font-size: 10px;
+  color: var(--mute);
+  font-weight: 600;
+}
+.panel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.panel-task {
+  padding: 9px 10px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.panel-task.running {
+  border-color: rgba(67, 214, 160, 0.4);
+  background: rgba(67, 214, 160, 0.1);
+}
+.panel-task-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.panel-task-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.panel-task-amount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.panel-task-meta {
+  font-size: 10.5px;
+  color: var(--dim);
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-task-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.panel-step {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--card2);
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.panel-timer-btn {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--card2);
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.panel-timer-btn.running {
+  border-color: rgba(67, 214, 160, 0.4);
+  background: rgba(67, 214, 160, 0.14);
+  color: var(--success);
+}
+.panel-step svg,
+.panel-timer-btn svg {
+  flex: none;
+}
+
+.panel-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--mute);
+}

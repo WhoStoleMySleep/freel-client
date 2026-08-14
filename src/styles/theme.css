@@ -1,0 +1,121 @@
+/* Tokens copied verbatim from the design prototype. */
+:root {
+  --bg: #0a0b0e;
+  --screen: #0f1116;
+  --card: #171a21;
+  --card2: #1f232c;
+  --raise: #232833;
+  --text: #f3f5f9;
+  --dim: #9aa2b1;
+  --mute: #616a7b;
+  --border: rgba(255, 255, 255, 0.07);
+  --border2: rgba(255, 255, 255, 0.11);
+  --accent: #6c8cff;
+  --gold: #f5c451;
+  --success: #43d6a0;
+  --danger: #ff7a7a;
+  /* Layered as a gradient on hover so it tints any background without
+     disturbing the element's own background-color or box-shadow. */
+  --hover: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='light'] {
+  --bg: #e7e9ee;
+  --screen: #f5f6f9;
+  --card: #ffffff;
+  --card2: #f1f3f7;
+  --raise: #ffffff;
+  --text: #10131a;
+  --dim: #5a6273;
+  --mute: #98a0b0;
+  --border: rgba(10, 14, 25, 0.09);
+  --border2: rgba(10, 14, 25, 0.14);
+  /* The prototype injects the accent inline, so it stays the same in both themes. */
+  --accent: #6c8cff;
+  --gold: #c9930a;
+  --success: #1f9f75;
+  --danger: #e0453f;
+  --hover: rgba(10, 14, 25, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Manrope', system-ui, sans-serif;
+  background: var(--screen);
+  color: var(--text);
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.num {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.scr {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.scr::-webkit-scrollbar {
+  width: 0;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shine {
+  0% {
+    background-position: 180% 0;
+  }
+  50% {
+    background-position: -80% 0;
+  }
+  100% {
+    background-position: 180% 0;
+  }
+}
+@keyframes ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 214, 160, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(67, 214, 160, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 214, 160, 0);
+  }
+}
