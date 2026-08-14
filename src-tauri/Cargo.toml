@@ -29,7 +29,7 @@ tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
 # the backup restore can open a real transaction on it.
 sqlx = { version = "0.8", features = ["sqlite"] }
 tauri-plugin-clipboard-manager = "2.3.2"
-tauri-plugin-timer = { version = "0.1.0", path = "../../tauri-plugin-timer" }
+tauri-plugin-timer = "0.1"
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-fs = "2.5.1"
 # Sync talks to the server from Rust: the round trip and the local apply then

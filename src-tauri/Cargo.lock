@@ -4726,6 +4726,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-timer"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45418aa47309ed8826cc02a0b15ce8c8d7ec0b360359ea17b5fd638627df2fee"
 dependencies = [
  "serde",
  "serde_json",

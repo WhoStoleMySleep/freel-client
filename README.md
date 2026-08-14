@@ -39,7 +39,7 @@ A time tracker and invoicing app for freelance work. One codebase for desktop an
 
 **Android**
 
-- Ongoing timer notification with a system chronometer and pause / resume / stop buttons, held by a foreground service — it keeps counting with the app backgrounded and no JavaScript running. Implemented as a separate crate, [`tauri-plugin-timer`](../tauri-plugin-timer)
+- Ongoing timer notification with a system chronometer and pause / resume / stop buttons, held by a foreground service — it keeps counting with the app backgrounded and no JavaScript running. Implemented as a separate crate, [`tauri-plugin-timer`](https://crates.io/crates/tauri-plugin-timer), published to crates.io
 
 <p align="center">
   <img src="screenshots/notification.webp" width="300" alt="Ongoing timer notification" />
@@ -88,19 +88,11 @@ The whole exchange lives in Rust rather than the web view for three reasons: the
 | UI | React 19, Zustand 5, hand-written CSS |
 | Storage | SQLite via `tauri-plugin-sql`, `sqlx` for transactional writes |
 | HTTP | `reqwest` (rustls) |
-| Android notification | [`tauri-plugin-timer`](../tauri-plugin-timer) — own plugin, Kotlin |
+| Android notification | [`tauri-plugin-timer`](https://crates.io/crates/tauri-plugin-timer) — own plugin, Kotlin |
 | Fonts | Manrope + Space Grotesk, self-hosted via Fontsource |
 | Build | Vite 7, TypeScript 5.8 |
 
 ## Build
-
-The app depends on the timer plugin by relative path, so both repositories have to sit side by side:
-
-```
-Freel/
-  freel-client/
-  tauri-plugin-timer/
-```
 
 ```bash
 npm install
