@@ -1,3 +1,4 @@
+mod snapshot;
 mod sync;
 
 use serde::Deserialize;
@@ -733,6 +734,9 @@ pub fn run() {
             sync::sync_status,
             sync::sync_mark_dirty
         ])
+        // Before the SQL plugin: it opens (and migrates) the database as soon
+        // as it is set up, and the snapshot has to predate that.
+        .plugin(snapshot::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_timer::init())
