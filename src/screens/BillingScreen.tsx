@@ -2,14 +2,15 @@ import { useMemo, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { buildMonthChart } from '../domain/chart';
 import { formatMoney } from '../domain/money';
-import { INVOICE_STATUS } from '../domain/status';
+import { INVOICE_STATUS, REVIEW_STATUSES } from '../domain/status';
 import { monthLabel, shortDate } from '../utils/date';
 import { GenerateInvoiceModal } from '../modals/GenerateInvoiceModal';
+import { GenerateReportModal } from '../modals/GenerateReportModal';
 import { InvoiceDetailModal } from '../modals/InvoiceDetailModal';
-import { IconChevronLeft, IconChevronRight, IconInvoice } from '../components/icons';
+import { IconChevronLeft, IconChevronRight, IconInvoice, IconLink } from '../components/icons';
 
 const MAX_MONTHS_BACK = 36;
-type ModalState = { type: 'generate' } | { type: 'detail'; invoiceId: string } | null;
+type ModalState = { type: 'generate' } | { type: 'report' } | { type: 'detail'; invoiceId: string } | null;
 
 export function BillingScreen() {
   const invoices = useAppStore((s) => s.invoices);
@@ -20,6 +21,7 @@ export function BillingScreen() {
   const touchX = useRef(0);
 
   const canGenerate = tasks.some((t) => t.status === 'waiting_payment');
+  const reviewCount = tasks.filter((t) => REVIEW_STATUSES.includes(t.status)).length;
 
   const { year, month } = useMemo(() => {
     const d = new Date();
@@ -46,6 +48,16 @@ export function BillingScreen() {
       </button>
       <p className="gen-hint">
         {canGenerate ? 'Есть задачи «Ожидает оплаты»' : 'Нет задач со статусом «Ожидает оплаты»'}
+      </p>
+
+      <button className="gen-btn ghost" onClick={() => setModal({ type: 'report' })}>
+        <IconLink size={17} strokeWidth={2.2} />
+        Отчёт по задачам
+      </button>
+      <p className="gen-hint">
+        {reviewCount
+          ? `На проверке: ${reviewCount} — со ссылками вместо часов`
+          : 'Нет задач на проверке, но статусы можно выбрать в отчёте'}
       </p>
 
       <div
@@ -136,6 +148,7 @@ export function BillingScreen() {
       </div>
 
       <GenerateInvoiceModal open={modal?.type === 'generate'} onClose={() => setModal(null)} />
+      <GenerateReportModal open={modal?.type === 'report'} onClose={() => setModal(null)} />
       <InvoiceDetailModal
         open={modal?.type === 'detail'}
         invoiceId={modal?.type === 'detail' ? modal.invoiceId : null}

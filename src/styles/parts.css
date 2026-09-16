@@ -433,6 +433,16 @@ textarea.input {
   text-align: center;
   margin: 8px 0 0;
 }
+
+/* Second action on the billing screen: same shape as the invoice button, but
+   visibly not the primary one — a report costs nothing and changes nothing. */
+.gen-btn.ghost {
+  margin-top: 14px;
+  background: var(--card);
+  color: var(--accent);
+  border: 1px solid var(--border2);
+  box-shadow: none;
+}
 .chart-card {
   margin-top: 20px;
   background: var(--card);
@@ -610,6 +620,30 @@ textarea.input {
   font-weight: 600;
   margin-top: 2px;
 }
+.gen-task-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 2px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gen-task-link svg {
+  flex: none;
+}
+.gen-task-link.missing {
+  color: var(--gold);
+}
+/* The badge is stacked under a total elsewhere; here it sits beside the task. */
+.gen-task .status-badge {
+  margin-top: 0;
+  flex: none;
+}
 .checkbox {
   width: 20px;
   height: 20px;
@@ -654,6 +688,32 @@ textarea.input {
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
+}
+.sel-warn {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* Exactly what lands in the clipboard, so nothing is a surprise after sending. */
+.report-preview {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 13px 15px;
+  margin: 0;
+  max-height: 210px;
+  overflow: auto;
+  scrollbar-width: none;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.report-preview::-webkit-scrollbar {
+  width: 0;
 }
 
 /* ---------- invoice detail ---------- */

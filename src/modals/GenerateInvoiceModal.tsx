@@ -1,29 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BottomSheet, ModalHead } from '../components/BottomSheet';
 import { Chip } from '../components/Field';
-import { IconCheck, IconClock } from '../components/icons';
+import { SelectBox, markStateOf } from '../components/SelectBox';
+import { IconClock } from '../components/icons';
 import { useAppStore } from '../store/useAppStore';
 import { formatMinutes } from '../domain/time';
 import { formatMoney } from '../domain/money';
 import { taskAmount } from '../domain/earnings';
 import { Task } from '../domain/types';
-
-type MarkState = 'none' | 'some' | 'all';
-
-function markStateOf(selected: number, total: number): MarkState {
-  if (selected === 0 || total === 0) return 'none';
-  return selected === total ? 'all' : 'some';
-}
-
-function SelectBox({ state, big }: { state: MarkState; big?: boolean }) {
-  const cls = ['checkbox', big && 'big', state === 'all' && 'all', state === 'some' && 'some'].filter(Boolean).join(' ');
-  return (
-    <span className={cls}>
-      {state === 'all' ? <IconCheck size={big ? 12 : 11} color="#fff" /> : null}
-      {state === 'some' ? <span className="checkbox-dash" /> : null}
-    </span>
-  );
-}
 
 export function GenerateInvoiceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const tasks = useAppStore((s) => s.tasks);

@@ -80,6 +80,13 @@ export const IconInvoice = (p: IconProps) => (
   </svg>
 );
 
+export const IconLink = (p: IconProps) => (
+  <svg {...stroke({ ...p, strokeWidth: p.strokeWidth ?? 2.2 })}>
+    <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+    <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+  </svg>
+);
+
 export const IconTabDash = (p: IconProps) => (
   <svg {...stroke({ ...p, size: p.size ?? 22 })}>
     <rect x="3" y="3" width="7" height="9" rx="1.5" />

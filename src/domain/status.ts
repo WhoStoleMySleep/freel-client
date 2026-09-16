@@ -42,6 +42,13 @@ export const COUNTED_STATUSES: TaskStatus[] = [
  */
 export const EARNED_STATUSES: TaskStatus[] = [...COUNTED_STATUSES, 'done'];
 
+/**
+ * Pre-ticked when building a review report: work that has left your hands and
+ * now waits on someone else. The report modal lets any other status be added,
+ * so this is a starting point rather than a restriction.
+ */
+export const REVIEW_STATUSES: TaskStatus[] = ['review_code', 'review_managers'];
+
 // Fixed top-to-bottom grouping order for the dashboard task list.
 export const DASH_ORDER: TaskStatus[] = [
   'paused',
