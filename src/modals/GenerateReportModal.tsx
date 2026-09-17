@@ -3,16 +3,18 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { BottomSheet, ModalHead } from '../components/BottomSheet';
 import { Chip } from '../components/Field';
 import { SelectBox, markStateOf } from '../components/SelectBox';
-import { IconLink } from '../components/icons';
+import { IconClock, IconLink } from '../components/icons';
 import { useFlash } from '../hooks/useFlash';
 import { useAppStore } from '../store/useAppStore';
 import { DASH_ORDER, REVIEW_STATUSES, STATUS, TaskStatus } from '../domain/status';
-import { reportToText } from '../domain/reportText';
+import { ReportMode, reportToText } from '../domain/reportText';
+import { formatHoursRounded } from '../domain/time';
 import { Task } from '../domain/types';
 
 /**
  * Builds the "what is sitting with you" message: the tasks handed off for
- * review, grouped by project, each with its link.
+ * review, grouped by project, each with its link — or, if the recipient cares
+ * about effort rather than where to look, its hours.
  *
  * Deliberately produces nothing but text. An invoice is a record and is stored;
  * a report is a snapshot of statuses that change by the hour, so keeping copies
@@ -23,6 +25,7 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
   const projects = useAppStore((s) => s.projects);
 
   const [statuses, setStatuses] = useState<TaskStatus[]>(REVIEW_STATUSES);
+  const [mode, setMode] = useState<ReportMode>('link');
   const [filterProjectId, setFilterProjectId] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [copied, flashCopied] = useFlash(false, 2000);
@@ -32,6 +35,7 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
   useEffect(() => {
     if (!open) return;
     setStatuses(REVIEW_STATUSES);
+    setMode('link');
     setFilterProjectId('');
     setSelected(new Set(tasks.filter((t) => REVIEW_STATUSES.includes(t.status)).map((t) => t.id)));
     flashCopied(false);
@@ -84,9 +88,16 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
   // Built from `pool`, not `visibleTasks`: the project chips narrow what is on
   // screen, they do not carve up the report being sent.
   const selectedTasks = pool.filter((t) => selected.has(t.id));
-  const withoutLink = selectedTasks.filter((t) => !t.link.trim()).length;
+  // Only the detail the chosen mode actually prints is worth warning about.
+  const incomplete = selectedTasks.filter((t) => (mode === 'hours' ? t.minutes <= 0 : !t.link.trim())).length;
   const text = reportToText(
-    selectedTasks.map((t) => ({ projectName: projectName(t.projectId), title: t.title, link: t.link }))
+    selectedTasks.map((t) => ({
+      projectName: projectName(t.projectId),
+      title: t.title,
+      link: t.link,
+      minutes: t.minutes,
+    })),
+    mode
   );
 
   const copy = async () => {
@@ -103,7 +114,18 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
     <BottomSheet open={open} onClose={onClose}>
       <div className="sheet-body">
         <ModalHead title="Отчёт по задачам" onClose={onClose} />
-        <p className="modal-hint">Вместо часов в отчёт идёт ссылка на задачу. Отметьте статусы, которые нужно включить.</p>
+        <p className="modal-hint">
+          {mode === 'hours'
+            ? 'В отчёт идут часы по каждой задаче и общий итог.'
+            : 'Вместо часов в отчёт идёт ссылка на задачу.'}{' '}
+          Отметьте статусы, которые нужно включить.
+        </p>
+
+        <div className="field-label">Что писать в строке</div>
+        <div className="chips" style={{ gap: 5, marginBottom: 14 }}>
+          <Chip label="Ссылка" active={mode === 'link'} onClick={() => setMode('link')} small />
+          <Chip label="Часы" active={mode === 'hours'} onClick={() => setMode('hours')} small />
+        </div>
 
         <div className="field-label">Статусы</div>
         <div className="chips" style={{ gap: 5, marginBottom: 14 }}>
@@ -157,6 +179,7 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
                   {g.tasks.map((t) => {
                     const isSel = selected.has(t.id);
                     const link = t.link.trim();
+                    const has = mode === 'hours' ? t.minutes > 0 : !!link;
                     return (
                       <button
                         key={t.id}
@@ -166,8 +189,9 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
                         <SelectBox state={isSel ? 'all' : 'none'} />
                         <span className="gen-task-body">
                           <span className="gen-task-title">{t.title}</span>
-                          <span className={link ? 'gen-task-link' : 'gen-task-link missing'}>
-                            <IconLink size={10} /> {link || 'ссылки нет'}
+                          <span className={has ? 'gen-task-link' : 'gen-task-link missing'}>
+                            {mode === 'hours' ? <IconClock size={10} /> : <IconLink size={10} />}{' '}
+                            {mode === 'hours' ? (t.minutes > 0 ? formatHoursRounded(t.minutes) : 'часов нет') : link || 'ссылки нет'}
                           </span>
                         </span>
                         <span
@@ -192,7 +216,9 @@ export function GenerateReportModal({ open, onClose }: { open: boolean; onClose:
 
         <div className="sel-summary">
           <span className="sel-count">Выбрано: {selectedTasks.length}</span>
-          {withoutLink ? <span className="sel-warn">Без ссылки: {withoutLink}</span> : null}
+          {incomplete ? (
+            <span className="sel-warn">{mode === 'hours' ? 'Без часов' : 'Без ссылки'}: {incomplete}</span>
+          ) : null}
         </div>
 
         {selectedTasks.length > 0 ? <pre className="report-preview">{text}</pre> : null}

@@ -56,7 +56,7 @@ export function BillingScreen() {
       </button>
       <p className="gen-hint">
         {reviewCount
-          ? `На проверке: ${reviewCount} — со ссылками вместо часов`
+          ? `На проверке: ${reviewCount} — ссылки или часы на выбор`
           : 'Нет задач на проверке, но статусы можно выбрать в отчёте'}
       </p>
 
