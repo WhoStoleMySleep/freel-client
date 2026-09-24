@@ -15,24 +15,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - run: npm run lint
+      - run: pnpm lint
 
-      - run: npm run typecheck
+      - run: pnpm typecheck
 
-      - run: npm test
+      - run: pnpm test
 
-      - run: npm run build
+      - run: pnpm build
 
       # The other steps see the source through Vite; this one checks the bundle
       # Tauri actually ships — a build that generates nothing still passes lint.
-      - run: npm run smoke
+      - run: pnpm smoke
 
   rust:
     runs-on: ubuntu-latest
