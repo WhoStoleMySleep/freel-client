@@ -24,27 +24,27 @@ export function parseBackup(raw: string): { ok: true; data: BackupFile } | { ok:
   if (typeof json !== 'object' || json === null) {
     return { ok: false, error: 'Файл повреждён.' }
   }
-  const b = json as Partial<BackupFile>
+  const backup = json as Partial<BackupFile>
 
-  if (b.app !== BACKUP_APP_ID) {
+  if (backup.app !== BACKUP_APP_ID) {
     return { ok: false, error: 'Это не резервная копия freel.' }
   }
-  if (typeof b.formatVersion !== 'number' || b.formatVersion > BACKUP_FORMAT_VERSION) {
+  if (typeof backup.formatVersion !== 'number' || backup.formatVersion > BACKUP_FORMAT_VERSION) {
     return { ok: false, error: 'Копия создана более новой версией приложения.' }
   }
-  if (!b.settings || !isArray(b.projects) || !isArray(b.tasks) || !isArray(b.invoices) || !isArray(b.invoiceItems) || !isArray(b.timeEntries)) {
+  if (!backup.settings || !isArray(backup.projects) || !isArray(backup.tasks) || !isArray(backup.invoices) || !isArray(backup.invoiceItems) || !isArray(backup.timeEntries)) {
     return { ok: false, error: 'В копии не хватает данных.' }
   }
 
   return { ok: true, data: json as BackupFile }
 }
 
-export function summarize(b: BackupFile): BackupSummary {
+export function summarize(backup: BackupFile): BackupSummary {
   return {
-    projects: b.projects.length,
-    tasks: b.tasks.length,
-    invoices: b.invoices.length,
-    exportedAt: b.exportedAt,
+    projects: backup.projects.length,
+    tasks: backup.tasks.length,
+    invoices: backup.invoices.length,
+    exportedAt: backup.exportedAt,
   }
 }
 

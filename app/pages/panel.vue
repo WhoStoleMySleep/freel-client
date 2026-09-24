@@ -20,7 +20,7 @@ const timer = useTimerStore()
 const projects = useProjectsStore()
 const { ready } = storeToRefs(app)
 const { items: tasks } = storeToRefs(tasksStore)
-const { active: activeTimer } = storeToRefs(timer)
+const { active: activeTimer, task: running } = storeToRefs(timer)
 const { currency, defaultRate } = storeToRefs(useSettingsStore())
 
 const title = ref('')
@@ -28,7 +28,6 @@ const projectId = ref('')
 
 const open = computed(() => tasks.value.filter(task => task.status !== 'done'))
 const groups = computed(() => boardGroups(open.value))
-const running = computed(() => (activeTimer.value ? tasksStore.byId.get(activeTimer.value.taskId) ?? null : null))
 const clock = computed(() => (activeTimer.value ? formatClock(Math.floor(timerElapsedMs(activeTimer.value, nowMs.value) / 1000)) : ''))
 const canAdd = computed(() => !!title.value.trim() && !!projectId.value)
 

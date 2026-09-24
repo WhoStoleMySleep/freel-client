@@ -1,4 +1,25 @@
 import { getDb } from '~/repositories/db'
+import type { TimeEntry } from '~/types'
+
+export interface TimeEntryRow {
+  id: string
+  task_id: string
+  day_key: string
+  minutes: number
+  created_at: string
+  updated_at: string
+}
+
+export function mapTimeEntry(row: TimeEntryRow): TimeEntry {
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    dayKey: row.day_key,
+    minutes: row.minutes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 /**
  * Records worked minutes as a new row, always.

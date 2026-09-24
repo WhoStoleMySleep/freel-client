@@ -9,6 +9,16 @@ import type { ActiveTimer } from '~/types'
  */
 let posted: string | null = null
 
+/** Everything the Android notification shows besides the task and the clock. */
+const LABELS = {
+  pausedLabel: 'На паузе',
+  runningLabel: 'Идёт запись времени',
+  pauseActionLabel: 'Пауза',
+  resumeActionLabel: 'Продолжить',
+  stopActionLabel: 'Остановить',
+  channelName: 'Таймер задачи',
+} as const
+
 /**
  * Posts the ongoing notification. The elapsed time is rendered by Android's
  * own chronometer, seeded with the session start — so it keeps counting while
@@ -23,17 +33,7 @@ export async function showTimerNotification(taskTitle: string, timer: ActiveTime
   const baseMs = Date.now() - (timer.accumulatedMs + runningMs)
   try {
     await invoke('plugin:timer|show', {
-      args: {
-        title: taskTitle,
-        baseMs: Math.round(baseMs),
-        paused: timer.paused,
-        pausedLabel: 'На паузе',
-        runningLabel: 'Идёт запись времени',
-        pauseActionLabel: 'Пауза',
-        resumeActionLabel: 'Продолжить',
-        stopActionLabel: 'Остановить',
-        channelName: 'Таймер задачи',
-      },
+      args: { title: taskTitle, baseMs: Math.round(baseMs), paused: timer.paused, ...LABELS },
     })
     posted = signature
   }

@@ -9,6 +9,8 @@ export const useTimerStore = defineStore('timer', () => {
 
   const running = computed(() => !!active.value && !active.value.paused)
   const taskId = computed(() => active.value?.taskId ?? null)
+  /** The task being timed — every window needs it to label the timer. */
+  const task = computed(() => (taskId.value ? useTasksStore().byId.get(taskId.value) ?? null : null))
 
   async function notify(timer: ActiveTimer): Promise<void> {
     const title = useTasksStore().byId.get(timer.taskId)?.title
@@ -74,5 +76,5 @@ export const useTimerStore = defineStore('timer', () => {
     if (taskId.value && ids.includes(taskId.value)) await stop()
   }
 
-  return { active, running, taskId, apply, start, pause, resume, stop, forget, forgetTask, settle }
+  return { active, running, taskId, task, apply, start, pause, resume, stop, forget, forgetTask, settle }
 })

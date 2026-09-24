@@ -2,7 +2,7 @@ import { getDb } from '~/repositories/db'
 import { softDelete } from '~/repositories/softDelete'
 import type { RateType, Task, TaskStatus } from '~/types'
 
-interface TaskRow {
+export interface TaskRow {
   id: string
   project_id: string
   title: string
@@ -16,7 +16,7 @@ interface TaskRow {
   updated_at: string
 }
 
-function mapTask(row: TaskRow): Task {
+export function mapTask(row: TaskRow): Task {
   return {
     id: row.id,
     projectId: row.project_id,

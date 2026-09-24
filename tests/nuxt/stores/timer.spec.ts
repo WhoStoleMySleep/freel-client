@@ -42,6 +42,32 @@ describe('запуск', () => {
   })
 })
 
+describe('задача под таймером', () => {
+  test('без таймера задачи нет', async () => {
+    const { timer } = await stores()
+
+    expect(timer.task).toBeNull()
+  })
+
+  test('геттер отдаёт саму задачу, а не только её id', async () => {
+    const { tasks, timer } = await stores()
+    const first = tasks.items[0]!
+
+    await timer.start(first.id)
+
+    expect(timer.task?.title).toBe(first.title)
+  })
+
+  test('остановка снимает задачу', async () => {
+    const { tasks, timer } = await stores()
+    await timer.start(tasks.items[0]!.id)
+
+    await timer.stop()
+
+    expect(timer.task).toBeNull()
+  })
+})
+
 describe('пауза и продолжение', () => {
   test('пауза копит наработанное и останавливает счёт', async () => {
     const { tasks, timer } = await stores()

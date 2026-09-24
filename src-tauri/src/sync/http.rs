@@ -12,6 +12,8 @@ use super::local::{Device, Session};
 use super::wire::{Payload, ServerError};
 
 /// What the sign-in form collected.
+///
+/// Deliberately not `Debug`: the password must not be formattable into a log.
 pub struct Credentials {
     pub email: String,
     pub password: String,
@@ -21,6 +23,10 @@ pub struct Credentials {
 pub(super) fn endpoint(base: &str, path: &str) -> String {
     format!("{}/{}", base.trim_end_matches('/'), path)
 }
+
+/// A whole exchange, not a single packet: a large first sync legitimately
+/// takes seconds, while a dead server must not hold the loop forever.
+const TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The process-wide HTTP client.
 ///
@@ -32,7 +38,7 @@ pub(super) fn client() -> Result<reqwest::Client> {
     CLIENT
         .get_or_init(|| {
             reqwest::Client::builder()
-                .timeout(Duration::from_secs(30))
+                .timeout(TIMEOUT)
                 .build()
                 .map_err(|e| e.to_string())
         })
@@ -49,6 +55,7 @@ async fn failure(res: reqwest::Response) -> Error {
     }
 }
 
+/// Creates the account. A registration returns no token — the caller logs in next.
 pub async fn register(url: &str, creds: &Credentials) -> Result<()> {
     let res = client()?
         .post(endpoint(url, "auth/register"))

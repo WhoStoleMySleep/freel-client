@@ -1,6 +1,6 @@
 import Database from '@tauri-apps/plugin-sql'
 
-// Schema creation lives in Rust (src-tauri/src/db/migrations.rs) as plugin
+// Schema creation lives in Rust (src-tauri/src/migrations.rs) as plugin
 // migrations, which run automatically on load — so this only has to open the
 // handle.
 let dbPromise: Promise<Database> | null = null

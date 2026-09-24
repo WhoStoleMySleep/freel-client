@@ -11,7 +11,7 @@ use crate::error::{Error, Result};
 /// a restore that fails partway leaves the old data exactly as it was.
 type Tx<'a> = sqlx::Transaction<'a, sqlx::Sqlite>;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupProject {
     id: String,
@@ -24,7 +24,7 @@ pub struct BackupProject {
     updated_at: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupTask {
     id: String,
@@ -42,7 +42,7 @@ pub struct BackupTask {
     updated_at: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupTimeEntry {
     id: String,
@@ -57,7 +57,7 @@ pub struct BackupTimeEntry {
     updated_at: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupInvoice {
     id: String,
@@ -75,7 +75,7 @@ pub struct BackupInvoice {
     updated_at: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupInvoiceItem {
     id: String,
@@ -91,7 +91,7 @@ pub struct BackupInvoiceItem {
     updated_at: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupSettings {
     theme_mode: String,
@@ -119,7 +119,7 @@ fn ts_or_day(ts: &str, day_key: &str) -> String {
 /// A day key, not a full timestamp — `ts_or_day` appends the time itself.
 const EPOCH_DAY: &str = "1970-01-01";
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupPayload {
     settings: BackupSettings,

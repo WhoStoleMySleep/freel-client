@@ -5,6 +5,7 @@ use tauri_plugin_sql::{DbInstances, DbPool};
 
 use crate::error::{Error, Result};
 
+/// The name the SQL plugin files our database under; migrations key off it too.
 pub const DB_KEY: &str = "sqlite:freel.db";
 
 /// Hands back the pool the SQL plugin opened for our database.

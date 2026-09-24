@@ -2,9 +2,8 @@
 export function useTimerInWindowTitle(): void {
   if (!isDesktopApp()) return
 
-  const { active } = storeToRefs(useTimerStore())
-  const tasks = useTasksStore()
-  const name = computed(() => (active.value ? tasks.byId.get(active.value.taskId)?.title : null) ?? 'Задача')
+  const { active, task } = storeToRefs(useTimerStore())
+  const name = computed(() => task.value?.title ?? 'Задача')
   let tick: ReturnType<typeof setInterval> | null = null
 
   function stop(): void {

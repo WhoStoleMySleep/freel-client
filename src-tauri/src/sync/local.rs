@@ -7,12 +7,16 @@ use crate::error::{Error, Result};
 use super::wire::{Invoice, InvoiceItem, Payload, Project, Settings, SyncStatus, Task, TimeEntry};
 
 /// This device as the server knows it.
+#[derive(Debug)]
 pub struct Device {
     pub id: String,
     pub code: String,
 }
 
 /// An established connection: where to sync and what to sync as.
+///
+/// Deliberately not `Debug`: the token is a credential, and a type that cannot
+/// be formatted cannot end up in a log line by accident.
 pub struct Session {
     pub url: String,
     pub token: String,
@@ -59,6 +63,7 @@ pub async fn session(pool: &SqlitePool) -> Result<Session> {
     })
 }
 
+/// Stores the account and its token, the URL without its trailing slash.
 pub async fn save_login(pool: &SqlitePool, url: &str, email: &str, token: &str) -> Result<()> {
     sqlx::query("UPDATE settings SET sync_url = ?, sync_email = ?, sync_token = ? WHERE id = 1")
         .bind(url.trim_end_matches('/'))

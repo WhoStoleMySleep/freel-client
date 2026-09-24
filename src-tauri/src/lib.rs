@@ -49,12 +49,13 @@ pub fn run() {
             // the edge panel are the point of it staying alive.
             #[cfg(desktop)]
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "main" {
-                    api.prevent_close();
-                    let _ = window.hide();
+                if window.label() != "main" {
+                    return;
                 }
+                api.prevent_close();
+                let _ = window.hide();
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Tauri failed to start: nothing is running to report it to");
 }

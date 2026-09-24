@@ -1,5 +1,8 @@
 import type { Invoice } from '~/types'
 
+const WIDTH = 304
+const HEIGHT = 120
+const PAD = 10
 
 export interface MonthChart {
   width: number
@@ -15,61 +18,81 @@ export interface MonthChart {
   hasDeviation: boolean
 }
 
-// Builds a cumulative-income chart for one calendar month from invoices dated
-// within it. The solid line is what was actually received; the dashed line is
-// the expected (invoiced) total — they diverge once a paid invoice's factual
-// amount differs from the amount billed.
-export function buildMonthChart(invoices: Invoice[], year: number, month: number): MonthChart {
-  const width = 304
-  const height = 120
-  const pad = 10
-  const days = daysInMonth(year, month)
+interface MonthTotals {
+  /** Running total of what the invoices billed, one entry per day. */
+  expected: number[]
+  /** Running total of what actually arrived, one entry per day. */
+  actual: number[]
+  hasDeviation: boolean
+}
 
-  const monthInvoices = invoices.filter((inv) => isDayKeyInMonth(inv.dayKey, year, month))
+function runningTotals(byDay: number[], days: number): number[] {
+  const totals: number[] = []
+  let sum = 0
+  for (let day = 1; day <= days; day++) {
+    sum += byDay[day] ?? 0
+    totals.push(sum)
+  }
+  return totals
+}
 
-  const calcByDay = new Array(days + 1).fill(0)
-  const actualByDay = new Array(days + 1).fill(0)
+function monthTotals(invoices: Invoice[], days: number): MonthTotals {
+  const billedByDay = new Array(days + 1).fill(0)
+  const receivedByDay = new Array(days + 1).fill(0)
   let hasDeviation = false
 
-  for (const inv of monthInvoices) {
-    const d = dayOfMonth(inv.dayKey)
-    calcByDay[d] += inv.total
-    const actual = inv.factual != null ? inv.factual : inv.total
-    actualByDay[d] += actual
-    if (actual !== inv.total) hasDeviation = true
+  for (const invoice of invoices) {
+    const day = dayOfMonth(invoice.dayKey)
+    const received = invoice.factual ?? invoice.total
+    billedByDay[day] += invoice.total
+    receivedByDay[day] += received
+    if (received !== invoice.total) hasDeviation = true
   }
-
-  const calcCumulative: number[] = []
-  const actualCumulative: number[] = []
-  let ca = 0
-  let aa = 0
-  for (let d = 1; d <= days; d++) {
-    ca += calcByDay[d]
-    aa += actualByDay[d]
-    calcCumulative.push(ca)
-    actualCumulative.push(aa)
-  }
-
-  const max = Math.max(1, calcCumulative.at(-1) ?? 0, actualCumulative.at(-1) ?? 0)
-  const x = (i: number) => pad + (i / (days - 1)) * (width - 2 * pad)
-  const y = (v: number) => height - pad - (v / max) * (height - 2 * pad)
-
-  const toPath = (vals: number[]) =>
-    vals.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ')
-
-  const expectedPath = toPath(calcCumulative)
-  const actualPath = toPath(actualCumulative)
-  const actualAreaPath =
-    actualPath + ' L' + x(days - 1).toFixed(1) + ' ' + (height - pad) + ' L' + x(0).toFixed(1) + ' ' + (height - pad) + ' Z'
 
   return {
-    width,
-    height,
-    actualAreaPath,
+    expected: runningTotals(billedByDay, days),
+    actual: runningTotals(receivedByDay, days),
+    hasDeviation,
+  }
+}
+
+/** Projects cumulative values onto the SVG box; both lines share one scale. */
+function createProjection(days: number, max: number) {
+  const x = (i: number) => PAD + (i / (days - 1)) * (WIDTH - 2 * PAD)
+  const y = (value: number) => HEIGHT - PAD - (value / max) * (HEIGHT - 2 * PAD)
+
+  const line = (values: number[]) =>
+    values.map((value, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(value).toFixed(1)}`).join(' ')
+
+  const closeToBaseline = (path: string) =>
+    `${path} L${x(days - 1).toFixed(1)} ${HEIGHT - PAD} L${x(0).toFixed(1)} ${HEIGHT - PAD} Z`
+
+  return { line, closeToBaseline }
+}
+
+/**
+ * Builds a cumulative-income chart for one calendar month from invoices dated
+ * within it. The solid line is what was actually received; the dashed line is
+ * the expected (invoiced) total — they diverge once a paid invoice's factual
+ * amount differs from the amount billed.
+ */
+export function buildMonthChart(invoices: Invoice[], year: number, month: number): MonthChart {
+  const days = daysInMonth(year, month)
+  const monthInvoices = invoices.filter((invoice) => isDayKeyInMonth(invoice.dayKey, year, month))
+  const { expected, actual, hasDeviation } = monthTotals(monthInvoices, days)
+
+  const max = Math.max(1, expected.at(-1) ?? 0, actual.at(-1) ?? 0)
+  const { line, closeToBaseline } = createProjection(days, max)
+  const actualPath = line(actual)
+
+  return {
+    width: WIDTH,
+    height: HEIGHT,
+    actualAreaPath: closeToBaseline(actualPath),
     actualPath,
-    expectedPath,
-    calculatedTotal: calcCumulative[days - 1] || 0,
-    actualTotal: actualCumulative[days - 1] || 0,
+    expectedPath: line(expected),
+    calculatedTotal: expected[days - 1] || 0,
+    actualTotal: actual[days - 1] || 0,
     hasDeviation,
   }
 }

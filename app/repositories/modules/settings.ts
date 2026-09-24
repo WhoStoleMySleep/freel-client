@@ -67,11 +67,18 @@ function mapActiveTimer(row: SettingsRow): ActiveTimer | null {
   }
 }
 
+/**
+ * Reads the single settings row.
+ *
+ * The row is inserted by the first migration, so its absence means a broken
+ * database rather than a fresh install — the defaults keep the app openable
+ * instead of failing at boot, when nothing could show the error anyway.
+ */
 export async function loadSettings(): Promise<{ settings: Settings; activeTimer: ActiveTimer | null }> {
   const db = await getDb()
   const rows = await db.select<SettingsRow[]>('SELECT * FROM settings WHERE id = 1')
   const row = rows[0]
-  if (!row) throw new Error('settings row missing')
+  if (!row) return { settings: { ...DEFAULT_SETTINGS }, activeTimer: null }
   return { settings: mapSettings(row), activeTimer: mapActiveTimer(row) }
 }
 

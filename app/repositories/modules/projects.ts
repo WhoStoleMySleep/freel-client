@@ -2,7 +2,7 @@ import { getDb } from '~/repositories/db'
 import { softDelete } from '~/repositories/softDelete'
 import type { Project } from '~/types'
 
-interface ProjectRow {
+export interface ProjectRow {
   id: string
   name: string
   description: string
@@ -11,7 +11,7 @@ interface ProjectRow {
   updated_at: string
 }
 
-function mapProject(row: ProjectRow): Project {
+export function mapProject(row: ProjectRow): Project {
   return {
     id: row.id,
     name: row.name,
