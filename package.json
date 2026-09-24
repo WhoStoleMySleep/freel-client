@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt generate",
+    "smoke": "node scripts/smoke.mjs",
     "preview": "nuxt preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -14,7 +15,8 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "postinstall": "nuxt prepare",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fontsource/manrope": "^5.3.0",
@@ -39,6 +41,8 @@
     "@vue/test-utils": "^2.5.1",
     "eslint": "^10.11.0",
     "happy-dom": "^20.14.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
     "typescript": "~5.8.3",
     "vite": "^8.3.0",
     "vitest": "^5.0.1",

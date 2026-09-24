@@ -1,0 +1,4 @@
+echo "🧪 pre-push: full test run..."
+npm test || exit 1
+cargo test --manifest-path src-tauri/Cargo.toml || exit 1
+echo "✅ pre-push passed"
