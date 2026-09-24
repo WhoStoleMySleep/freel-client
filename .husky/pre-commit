@@ -1,0 +1,3 @@
+echo "🔍 pre-commit: lint and tests for the touched files..."
+npx lint-staged
+echo "✅ pre-commit passed"

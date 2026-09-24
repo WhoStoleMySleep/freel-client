@@ -37,6 +37,14 @@ export default withNuxt(
   },
 
   {
+    files: ['scripts/**'],
+    rules: {
+      'no-console': 'off',
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  {
     files: ['tests/**/*.ts'],
     rules: {
       'no-console': 'off',
