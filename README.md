@@ -54,7 +54,7 @@ A time tracker and invoicing app for freelance work. One codebase for desktop an
 ## Architecture
 
 ```
-React 19 + Zustand  (main window and edge panel, one bundle, two roots)
+Nuxt 4 + Pinia  (main window and edge panel — one bundle, a page each)
         │
         ├─ tauri-plugin-sql ──► SQLite (freel.db)      reads and simple writes
         │
@@ -67,6 +67,8 @@ React 19 + Zustand  (main window and edge panel, one bundle, two roots)
 ```
 
 Anything that must not be half-applied goes through Rust. `tauri-plugin-sql` spreads separate `execute` calls across pooled connections, so a cascade issued from JavaScript could survive a failure half-done. `sqlx` is pinned to the same 0.8 line the plugin resolves to, which makes the plugin's pool this crate's pool and lets those commands open a real transaction on it.
+
+The front end ships as static files — `ssr: false`, no Nitro inside the bundle. `/` and `/panel` are prerendered rather than left to client-side routing: the panel is a separate window opened by its own URL, and there is no server in there to answer an arbitrary path with an SPA shell.
 
 ## Sync
 
@@ -85,12 +87,13 @@ The whole exchange lives in Rust rather than the web view for three reasons: the
 | Layer | Technology |
 |---|---|
 | Shell | Tauri 2 (desktop + Android) |
-| UI | React 19, Zustand 5, hand-written CSS |
+| UI | Nuxt 4, Vue 3.5, Pinia 4, hand-written CSS |
 | Storage | SQLite via `tauri-plugin-sql`, `sqlx` for transactional writes |
 | HTTP | `reqwest` (rustls) |
 | Android notification | [`tauri-plugin-timer`](https://crates.io/crates/tauri-plugin-timer) — own plugin, Kotlin |
 | Fonts | Manrope + Space Grotesk, self-hosted via Fontsource |
-| Build | Vite 7, TypeScript 5.8 |
+| Build | Vite 8, TypeScript 5.8 |
+| Tests | Vitest 5 with `@nuxt/test-utils`, `cargo test` on the Rust side |
 
 ## Build
 
@@ -102,36 +105,59 @@ npm run tauri build            # desktop bundle
 npm run tauri android build    # APK
 ```
 
+```bash
+npm run lint                   # ESLint, warnings are errors
+npm run typecheck              # vue-tsc through Nuxt
+npm test                       # Vitest
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
 Requires Rust, Node, and for Android: JDK 17+, the Android SDK and NDK with `ANDROID_HOME` / `NDK_HOME` set.
 
 ## Project structure
 
 ```
-src/
-  App.tsx              main window — tabs, onboarding, splash
-  PanelApp.tsx         edge panel — same bundle, mounted by window label
-  domain/              pure logic, no I/O
-    earnings.ts          elapsed time, live minutes, amounts
-    money.ts, time.ts    formatting
-    invoiceText.ts       invoice → plain text for the client
-    chart.ts             month chart paths — expected vs received
-    backup.ts            backup format, v1 → v2 migration on import
-    status.ts, types.ts  statuses, shared types
-  db/
-    client.ts            query helpers over tauri-plugin-sql
+app/
+  app.vue              shell — nothing but <NuxtPage />
+  pages/
+    index.vue            main window — tabs, onboarding, splash
+    panel.vue            edge panel — its own page, opened by URL
+  components/
+    Screen/              Dashboard, Projects, Billing, Onboarding
+    Modal/               task, project, invoice generation, invoice detail,
+                         done tasks, settings
+    Ui/                  bottom sheet, fields, icons, pickers, switches
+  composables/         timer tick and actions, theme, cross-window db sync,
+                       task selection, window title, transient messages
+  stores/              Pinia: app, projects, tasks, invoices, timer, settings
+  repositories/
+    db.ts                query helpers over tauri-plugin-sql
     softDelete.ts        tombstoning through the Rust cascade
-    repositories/        projects, tasks, time entries, invoices, settings
-  screens/             Dashboard, Projects, Billing, Onboarding
-  modals/              task, project, invoice generation, invoice detail,
-                       done tasks, settings
-  services/            sync, backup file dialogs, window title
-  notifications/       Android ongoing timer notification
-  store/               Zustand store, timer tick
+    source.ts, sources/  live SQLite or the demo data set
+    modules/             projects, tasks, time entries, invoices, settings,
+                         backup
+  utils/               pure logic — earnings, money, time, chart paths,
+                       invoice and report text, backup format with the
+                       v1 → v2 import, statuses, dashboard grouping —
+                       alongside the thin Tauri wrappers: sync commands,
+                       backup file dialogs, clipboard, window title, the
+                       Android timer notification
+  types/               every shared type, one file (nothing else is imported
+                       by hand — Nuxt auto-imports the rest)
+  assets/css/          theme, app, parts, desktop, panel
+
+tests/nuxt/            mirrors app/ — utils, composables, stores
 
 src-tauri/src/
-  lib.rs               migrations, panel window, edge watcher, tray,
-                       soft_delete and restore_backup commands
-  sync.rs              register / login / sync, auto-sync loop
+  lib.rs               module list and the Tauri builder
+  error.rs             one error type; commands hand JavaScript its message
+  db.rs                the pool tauri-plugin-sql opened
+  migrations.rs        schema history, every version ever shipped
+  backup.rs            restore_backup — a whole file in one transaction
+  soft_delete.rs       the tombstone cascade
+  snapshot.rs          VACUUM INTO copy taken before a new version migrates
+  desktop/             edge panel window, pointer watcher, tray icon
+  sync/                wire shapes, HTTP, local reads, merge, auto-sync, clock
 ```
 
 ## Schema
@@ -140,7 +166,6 @@ src-tauri/src/
 
 ## Not built yet
 
-- No automated tests. The domain layer is pure and would be straightforward to cover; nothing covers it today
 - Interface strings are Russian, hard-coded, with no i18n layer
 - Desktop is developed and tested on macOS; the edge panel relies on `macOSPrivateApi` for transparency
 

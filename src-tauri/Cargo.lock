@@ -1307,6 +1307,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-sql",
  "tauri-plugin-timer",
+ "thiserror 2.0.19",
  "tokio",
 ]
 

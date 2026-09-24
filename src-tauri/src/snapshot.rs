@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 use tauri::plugin::{Builder, TauriPlugin};
 use tauri::{Manager, Runtime};
 
+use crate::error::Result;
+
 /// How many snapshots to keep. Enough to survive a bad release going unnoticed
 /// for an upgrade or two, few enough not to quietly fill the disk.
 const KEEP: usize = 5;
@@ -34,8 +36,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .build()
 }
 
-fn take_if_new_version<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(), String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+fn take_if_new_version<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<()> {
+    let dir = app.path().app_config_dir()?;
     let db = dir.join("freel.db");
     // First ever launch: the SQL plugin is about to create the file, and an
     // empty database is not worth a copy.
@@ -54,13 +56,14 @@ fn take_if_new_version<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(), Stri
     prune(&dir);
 
     // Written last: if the copy failed, the next launch tries again.
-    std::fs::write(&stamp, &version).map_err(|e| e.to_string())
+    std::fs::write(&stamp, &version)?;
+    Ok(())
 }
 
 /// `VACUUM INTO` rather than a file copy: the database runs in WAL mode, so the
 /// `.db` file on its own is missing every change still sitting in `freel.db-wal`.
 /// This writes one self-contained, consistent file.
-async fn vacuum_into(db: &Path, out: &Path) -> Result<(), String> {
+async fn vacuum_into(db: &Path, out: &Path) -> Result<()> {
     use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Connection};
 
     // `VACUUM INTO` refuses to overwrite, and a half-written leftover from an
@@ -71,8 +74,7 @@ async fn vacuum_into(db: &Path, out: &Path) -> Result<(), String> {
         .filename(db)
         .create_if_missing(false)
         .connect()
-        .await
-        .map_err(|e| e.to_string())?;
+        .await?;
 
     // The path is ours, not user input, but a stray quote would still break the
     // statement — SQLite has no parameter slot in `VACUUM INTO`.
@@ -81,7 +83,7 @@ async fn vacuum_into(db: &Path, out: &Path) -> Result<(), String> {
         .execute(&mut conn)
         .await
         .map(|_| ())
-        .map_err(|e| e.to_string());
+        .map_err(Into::into);
 
     let _ = conn.close().await;
     result
@@ -140,9 +142,18 @@ mod tests {
             .connect(&format!("sqlite:{}?mode=rwc", db.display()))
             .await
             .unwrap();
-        sqlx::query("PRAGMA journal_mode = WAL").execute(&pool).await.unwrap();
-        sqlx::query("CREATE TABLE t (id INTEGER PRIMARY KEY)").execute(&pool).await.unwrap();
-        sqlx::query("INSERT INTO t (id) VALUES (1), (2), (3)").execute(&pool).await.unwrap();
+        sqlx::query("PRAGMA journal_mode = WAL")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("CREATE TABLE t (id INTEGER PRIMARY KEY)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO t (id) VALUES (1), (2), (3)")
+            .execute(&pool)
+            .await
+            .unwrap();
 
         vacuum_into(&db, &out).await.unwrap();
 
@@ -176,7 +187,10 @@ mod tests {
             .connect(&format!("sqlite:{}?mode=rwc", db.display()))
             .await
             .unwrap();
-        sqlx::query("CREATE TABLE t (id INTEGER PRIMARY KEY)").execute(&pool).await.unwrap();
+        sqlx::query("CREATE TABLE t (id INTEGER PRIMARY KEY)")
+            .execute(&pool)
+            .await
+            .unwrap();
 
         vacuum_into(&db, &out).await.unwrap();
         assert!(out.metadata().unwrap().len() > 20);
@@ -206,14 +220,18 @@ mod tests {
             .map(|(_, p)| p.file_name().unwrap().to_string_lossy().into_owned())
             .collect();
         names.sort();
-        assert_eq!(names, vec![format!("{PREFIX}0.1.0.db"), format!("{PREFIX}0.2.0.db")]);
+        assert_eq!(
+            names,
+            vec![format!("{PREFIX}0.1.0.db"), format!("{PREFIX}0.2.0.db")]
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn stale_drops_the_oldest_and_keeps_the_rest() {
-        let at = |secs: u64| std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+        let at =
+            |secs: u64| std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
         // Deliberately out of order, and two more than KEEP.
         let found: Vec<_> = [5u64, 1, 7, 3, 6, 2, 4]
             .iter()
@@ -233,7 +251,8 @@ mod tests {
 
     #[test]
     fn stale_spares_everything_while_under_the_limit() {
-        let at = |secs: u64| std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+        let at =
+            |secs: u64| std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
         let found: Vec<_> = (0..KEEP as u64)
             .map(|s| (at(s), PathBuf::from(format!("{PREFIX}{s}.db"))))
             .collect();

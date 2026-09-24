@@ -1,0 +1,63 @@
+export default defineNuxtConfig({
+  compatibilityDate: '2026-09-17',
+
+  // Тауриное окно — не сайт: индексировать нечего, а Nitro внутри бандла
+  // взяться неоткуда. Весь фронт отдаётся статикой из .output/public.
+  ssr: false,
+
+  modules: ['@pinia/nuxt', '@nuxt/eslint'],
+
+  eslint: {
+    config: { stylistic: false },
+  },
+
+  css: [
+    '@fontsource/manrope/400.css',
+    '@fontsource/manrope/500.css',
+    '@fontsource/manrope/600.css',
+    '@fontsource/manrope/700.css',
+    '@fontsource/manrope/800.css',
+    '@fontsource/space-grotesk/500.css',
+    '@fontsource/space-grotesk/600.css',
+    '@fontsource/space-grotesk/700.css',
+    '~/assets/css/theme.css',
+    '~/assets/css/app.css',
+    '~/assets/css/parts.css',
+    '~/assets/css/desktop.css',
+    '~/assets/css/panel.css',
+  ],
+
+  app: {
+    head: {
+      title: 'freel',
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+      meta: [
+        {
+          name: 'viewport',
+          content:
+            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content',
+        },
+      ],
+    },
+  },
+
+  // Панель открывается отдельным окном по своему URL, поэтому её страница
+  // должна существовать файлом: в бандле нет сервера, который отдал бы
+  // SPA-заглушку на произвольный путь.
+  nitro: {
+    prerender: { routes: ['/', '/panel'] },
+  },
+
+  devtools: { enabled: false },
+
+  // Порт фиксированный: его ждёт devUrl в tauri.conf.json.
+  devServer: { port: 1420 },
+
+  vite: {
+    clearScreen: false,
+    server: {
+      strictPort: true,
+      watch: { ignored: ['**/src-tauri/**'] },
+    },
+  },
+})
