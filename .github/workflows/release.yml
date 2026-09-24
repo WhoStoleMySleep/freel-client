@@ -1,0 +1,164 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  # Собирает те же установщики без релиза — чтобы проверить их до тега.
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon и Intel — отдельные сборки: универсальный бинарник
+          # Tauri собрать умеет, но тогда и зависимости нужны под обе арки.
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          # Не latest: deb и AppImage линкуются с glibc сборочной машины, а на
+          # более новой они перестанут ставиться на системы постарше.
+          - os: ubuntu-22.04
+            target: ''
+          - os: windows-latest
+            target: ''
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libxdo-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Пустой tagName — сборка без релиза: так работает ручной запуск.
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: freel ${{ github.ref_name }}
+          releaseDraft: true
+          args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+
+      - if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.os }}-${{ matrix.target || 'native' }}
+          path: |
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.rpm
+            src-tauri/target/**/release/bundle/**/*.AppImage
+            src-tauri/target/**/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.exe
+          if-no-files-found: error
+
+  android:
+    # Черновик релиза создаёт bundle; APK доливается в уже существующий.
+    needs: bundle
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27
+          local-cache: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: android
+
+      - run: pnpm install --frozen-lockfile
+
+      # Ключ подписи постоянный: Android ставит обновление поверх только при
+      # совпадении подписи, иначе приложение сносится вместе с базой.
+      - name: Unpack the signing key
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set — see README, the APK cannot be signed without it"
+            exit 1
+          fi
+          cd src-tauri/gen/android
+          echo "$KEYSTORE" | base64 -d > release.jks
+          printf 'keyAlias=%s\npassword=%s\nstoreFile=%s\n' \
+            "$ALIAS" "$PASSWORD" "$PWD/release.jks" > keystore.properties
+
+      - run: pnpm tauri android build --apk
+        env:
+          NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+
+      - name: Name the APK after the release
+        id: apk
+        run: |
+          src=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          out="freel-${GITHUB_REF_NAME}.apk"
+          mv "$src" "$out"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
+
+      - if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" "${{ steps.apk.outputs.path }}" --clobber
+
+      - if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-android
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error

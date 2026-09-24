@@ -99,17 +99,17 @@ The whole exchange lives in Rust rather than the web view for three reasons: the
 ## Build
 
 ```bash
-npm install
-npm run tauri dev              # desktop
-npm run tauri android dev      # Android, device or emulator
-npm run tauri build            # desktop bundle
-npm run tauri android build    # APK
+pnpm install
+pnpm tauri dev                 # desktop
+pnpm tauri android dev         # Android, device or emulator
+pnpm tauri build               # desktop bundle
+pnpm tauri android build       # APK
 ```
 
 ```bash
-npm run lint                   # ESLint, warnings are errors
-npm run typecheck              # vue-tsc through Nuxt
-npm test                       # Vitest
+pnpm lint                      # ESLint, warnings are errors
+pnpm typecheck                 # vue-tsc through Nuxt
+pnpm test                      # Vitest
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
@@ -122,9 +122,23 @@ Git hooks (husky):
 | `pre-commit` | `lint-staged` — ESLint on staged files plus the tests related to them, `cargo fmt --check` and clippy when Rust is touched |
 | `pre-push` | both suites — Vitest and `cargo test` |
 
-CI (`.github/workflows/ci.yml`) repeats lint, typecheck, tests and the static build on every branch and pull request, with a separate job for fmt, clippy and `cargo test`. `npm run smoke` runs after the build and checks the artefact Tauri actually ships: the entry page exists and every asset it references is on disk.
+CI (`.github/workflows/ci.yml`) repeats lint, typecheck, tests and the static build on every branch and pull request, with a separate job for fmt, clippy and `cargo test`. `pnpm smoke` runs after the build and checks the artefact Tauri actually ships: the entry page exists and every asset it references is on disk.
 
 Dependabot (`.github/dependabot.yml`) opens one grouped pull request a week for minor and patch bumps and separate ones for majors. `sqlx` is excluded — it has to keep resolving to the same version `tauri-plugin-sql` uses, otherwise the transactional commands lose the plugin's pool.
+
+Installers are built by `.github/workflows/release.yml`, not locally: Windows needs WebView2 and WiX, Linux needs webkit2gtk, and neither cross-compiles from a Mac. Pushing a `v*` tag builds a `.dmg` for both Apple architectures, `.deb` / `.rpm` / `.AppImage` on Ubuntu 22.04 (older glibc, so the packages still install on older systems) and `.msi` / `.exe` on Windows, and collects them into a draft release. Running the workflow by hand builds the same set and uploads it as workflow artifacts instead, which is the way to try an installer before tagging.
+
+Nothing is code-signed. macOS quarantines an unsigned app on download — `xattr -dr com.apple.quarantine "/Applications/freel (tauri).app"` is what clears it — and Windows shows a SmartScreen warning. Signing needs a paid certificate on both platforms.
+
+Android is the exception: an unsigned APK will not install at all, and Android only accepts an update whose signature matches the one already on the device — a different key means uninstalling the app, and the database with it. So the key is permanent and lives in three repository secrets, which the release job unpacks into `keystore.properties`:
+
+| Secret | What it holds |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | the `.jks` file, base64-encoded |
+| `ANDROID_KEY_ALIAS` | the alias inside it |
+| `ANDROID_KEY_PASSWORD` | the password for both store and key |
+
+Generated once with `keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias freel`. Keep the file and the password somewhere they cannot be lost — there is no way to re-issue them.
 
 ## Project structure
 
