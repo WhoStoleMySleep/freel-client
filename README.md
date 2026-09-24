@@ -54,7 +54,8 @@ A time tracker and invoicing app for freelance work. One codebase for desktop an
 ## Architecture
 
 ```
-Nuxt 4 + Pinia  (main window and edge panel — one bundle, a page each)
+Nuxt 4 + Pinia  (main window and edge panel — one bundle, the window's
+        │        label picks which one renders)
         │
         ├─ tauri-plugin-sql ──► SQLite (freel.db)      reads and simple writes
         │
@@ -68,7 +69,7 @@ Nuxt 4 + Pinia  (main window and edge panel — one bundle, a page each)
 
 Anything that must not be half-applied goes through Rust. `tauri-plugin-sql` spreads separate `execute` calls across pooled connections, so a cascade issued from JavaScript could survive a failure half-done. `sqlx` is pinned to the same 0.8 line the plugin resolves to, which makes the plugin's pool this crate's pool and lets those commands open a real transaction on it.
 
-The front end ships as static files — `ssr: false`, no Nitro inside the bundle. `/` and `/panel` are prerendered rather than left to client-side routing: the panel is a separate window opened by its own URL, and there is no server in there to answer an arbitrary path with an SPA shell.
+The front end ships as static files — `ssr: false`, no Nitro inside the bundle, one page. Both windows load it and the window's label decides what is rendered: giving the panel a route of its own would mean a second file, and the web view hands the router that file's path (`/panel/index.html`) rather than a route, with no server there to answer it with the SPA shell.
 
 ## Sync
 
@@ -114,15 +115,25 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 Requires Rust, Node, and for Android: JDK 17+, the Android SDK and NDK with `ANDROID_HOME` / `NDK_HOME` set.
 
+Git hooks (husky):
+
+| Hook | What runs |
+|---|---|
+| `pre-commit` | `lint-staged` — ESLint on staged files plus the tests related to them, `cargo fmt --check` and clippy when Rust is touched |
+| `pre-push` | both suites — Vitest and `cargo test` |
+
+CI (`.github/workflows/ci.yml`) repeats lint, typecheck, tests and the static build on every branch and pull request, with a separate job for fmt, clippy and `cargo test`. `npm run smoke` runs after the build and checks the artefact Tauri actually ships: the entry page exists and every asset it references is on disk.
+
+Dependabot (`.github/dependabot.yml`) opens one grouped pull request a week for minor and patch bumps and separate ones for majors. `sqlx` is excluded — it has to keep resolving to the same version `tauri-plugin-sql` uses, otherwise the transactional commands lose the plugin's pool.
+
 ## Project structure
 
 ```
 app/
-  app.vue              shell — nothing but <NuxtPage />
-  pages/
-    index.vue            main window — tabs, onboarding, splash
-    panel.vue            edge panel — its own page, opened by URL
+  app.vue              picks the window by its label
   components/
+    MainWindow.vue       main window — tabs, onboarding, splash
+    PanelWindow.vue      edge panel
     Screen/              Dashboard, Projects, Billing, Onboarding
     Modal/               task, project, invoice generation, invoice detail,
                          done tasks, settings

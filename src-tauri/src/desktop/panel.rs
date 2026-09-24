@@ -67,29 +67,20 @@ fn conceal(app: &AppHandle, panel: &WebviewWindow) {
     let _ = app;
 }
 
-/// Where the panel's page lives.
-///
-/// Сборка Nuxt кладёт страницу файлом `panel/index.html`, и протокол `tauri://`
-/// отдаёт ровно тот путь, который попросили, — каталог он не раскрывает. В dev
-/// же адрес уходит на сервер Nuxt, а там маршрут называется `/panel`: запрос
-/// файла попал бы в роутер как несуществующий путь.
-fn page() -> &'static str {
-    if tauri::is_dev() {
-        "panel"
-    } else {
-        "panel/index.html"
-    }
-}
-
 /// Creates the edge panel up front, hidden. Building it lazily on first hover
 /// would show a blank window while the webview boots.
+///
+/// It loads the same document as the main window — the front end renders the
+/// panel when it sees this label. A URL of its own would have to exist as a
+/// file in a bundle that has no server behind it, and the webview would then
+/// hand the router that file's path instead of a route.
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     use tauri::{WebviewUrl, WebviewWindowBuilder};
 
     let (screen_h, _) = screen_metrics(app);
     let height = (screen_h * 0.8).max(420.0);
 
-    WebviewWindowBuilder::new(app, "panel", WebviewUrl::App(page().into()))
+    WebviewWindowBuilder::new(app, "panel", WebviewUrl::default())
         .title("freel")
         .inner_size(WIDTH, height)
         .position(0.0, (screen_h - height) / 2.0)
