@@ -4,6 +4,8 @@ A time tracker and invoicing app for freelance work. One codebase for desktop an
 
 > Built for personal use. Everything lives in a local SQLite file; the optional sync server is a separate service and is not part of this repository — see [Sync](#sync). The interface ships in Russian and English.
 
+The decisions behind the architecture — and what each one costs — are written down in [DESIGN.md](DESIGN.md).
+
 <p align="center">
   <img src="screenshots/dashboard.webp" width="720" alt="Dashboard" />
 </p>
@@ -72,19 +74,19 @@ Nuxt 4 + Pinia  (main window and edge panel — one bundle, the window's
                                                 token never enters JavaScript
 ```
 
-Anything that must not be half-applied goes through Rust. `tauri-plugin-sql` spreads separate `execute` calls across pooled connections, so a cascade issued from JavaScript could survive a failure half-done. `sqlx` is pinned to the same 0.8 line the plugin resolves to, which makes the plugin's pool this crate's pool and lets those commands open a real transaction on it.
+Anything that must not be half-applied goes through Rust, on the same pool `tauri-plugin-sql` opened — the reasoning is in [DESIGN.md](DESIGN.md#1-anything-that-must-not-be-half-applied-goes-through-rust).
 
-The front end ships as static files — `ssr: false`, no Nitro inside the bundle, one page. Both windows load it and the window's label decides what is rendered: giving the panel a route of its own would mean a second file, and the web view hands the router that file's path (`/panel/index.html`) rather than a route, with no server there to answer it with the SPA shell.
+The front end ships as static files — `ssr: false`, no Nitro inside the bundle, one page. Both windows load it and the window's label decides what is rendered, [instead of a route](DESIGN.md#4-one-document-two-windows-no-router).
 
 ## Sync
 
 Off by default. When configured, the app talks to a self-hosted server over three endpoints — `auth/register`, `auth/login`, `sync` — with a token stored in the settings table.
 
-The whole exchange lives in Rust rather than the web view for three reasons: the reply has to be applied in one transaction, a request from `tauri://` would be blocked by CORS, and the token then never has to exist in JavaScript at all.
+The whole exchange lives in Rust rather than the web view — [one transaction, CORS, and a token JavaScript never sees](DESIGN.md#5-sync-lives-in-rust-and-the-token-never-reaches-javascript).
 
 - Deletions travel as tombstones — unlike a backup, which is a snapshot of what exists, a sync payload has to carry what no longer does
 - The auto-sync loop starts 8 seconds after launch and is nudged by a dirty flag, so an edit syncs promptly instead of waiting out the interval
-- Settings, invoice numbering and the running timer stay device-local: numbering has to stay unique per device, and a timer belongs to the machine it was started on
+- Theme, currency, default rate and the compact task form travel; invoice numbering, the running timer and the interface language stay device-local — numbering has to stay unique per device, and a timer belongs to the machine it was started on
 
 **The server is not in this repository.** Without it the app is a fully working local tracker; the sync screen simply stays disconnected.
 
