@@ -1,24 +1,26 @@
-import type { Invoice, InvoiceItem } from '~/types'
+import type { Invoice, InvoiceItem, TextContext } from '~/types'
 
-function projectBlock(name: string, items: InvoiceItem[]): string {
-  const lines = items.map((item, i) => `${i + 1}) ${item.title} - ${formatHoursRounded(item.minutes)}`)
+function projectBlock(name: string, items: InvoiceItem[], ctx: TextContext): string {
+  const lines = items.map((item, i) => `${i + 1}) ${item.title} - ${formatHoursRounded(item.minutes, ctx.locale)}`)
   return [name, ...lines].join('\n')
 }
 
 /**
  * Renders an invoice as plain text for sharing, grouped by project:
  *
- *   Проект
- *   1) задача - 2 ч
- *   2) задача - 1,5 ч
+ *   Project
+ *   1) task - 2 h
+ *   2) task - 1.5 h
  *
- *   Другой проект
- *   1) задача - 3 ч
+ *   Another project
+ *   1) task - 3 h
  *
- *   Итог: 6,5 ч
+ *   Total: 6.5 h
  */
-export function invoiceToText(invoice: Invoice): string {
-  const blocks = [...groupByProjectName(invoice.items)].map(([name, items]) => projectBlock(name, items))
+export function invoiceToText(invoice: Invoice, ctx: TextContext): string {
+  const groups = groupByProjectName(invoice.items, ctx.t('invoice.unnamedProject'))
+  const blocks = [...groups].map(([name, items]) => projectBlock(name, items, ctx))
   const totalMinutes = invoice.items.reduce((sum, item) => sum + item.minutes, 0)
-  return [...blocks, `Итог: ${formatHoursRounded(totalMinutes)}`].join('\n\n')
+  const total = ctx.t('report.total', { hours: formatHoursRounded(totalMinutes, ctx.locale) })
+  return [...blocks, total].join('\n\n')
 }

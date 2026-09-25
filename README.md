@@ -2,7 +2,7 @@
 
 A time tracker and invoicing app for freelance work. One codebase for desktop and Android: projects, tasks, a running timer, and invoices generated from the hours it recorded.
 
-> Built for personal use. Everything lives in a local SQLite file; the optional sync server is a separate service and is not part of this repository — see [Sync](#sync). Interface is Russian only.
+> Built for personal use. Everything lives in a local SQLite file; the optional sync server is a separate service and is not part of this repository — see [Sync](#sync). The interface ships in Russian and English.
 
 <p align="center">
   <img src="screenshots/dashboard.webp" width="720" alt="Dashboard" />
@@ -44,6 +44,11 @@ A time tracker and invoicing app for freelance work. One codebase for desktop an
 <p align="center">
   <img src="screenshots/notification.webp" width="300" alt="Ongoing timer notification" />
 </p>
+
+**Interface**
+
+- Russian and English, switched in Settings or left to follow the system language
+- Numbers, dates and durations follow the chosen language — `2ч 30м` against `2h 30m`, `1 500 ₽` against `$1,500`
 
 **Data**
 
@@ -88,12 +93,12 @@ The whole exchange lives in Rust rather than the web view for three reasons: the
 | Layer | Technology |
 |---|---|
 | Shell | Tauri 2 (desktop + Android) |
-| UI | Nuxt 4, Vue 3.5, Pinia 4, hand-written CSS |
+| UI | Nuxt 4, Vue 3.5, Pinia 4, vue-i18n 11, hand-written CSS |
 | Storage | SQLite via `tauri-plugin-sql`, `sqlx` for transactional writes |
 | HTTP | `reqwest` (rustls) |
 | Android notification | [`tauri-plugin-timer`](https://crates.io/crates/tauri-plugin-timer) — own plugin, Kotlin |
 | Fonts | Manrope + Space Grotesk, self-hosted via Fontsource |
-| Build | Vite 8, TypeScript 5.8 |
+| Build | Vite 8, TypeScript 6 |
 | Tests | Vitest 5 with `@nuxt/test-utils`, `cargo test` on the Rust side |
 
 ## Build
@@ -161,8 +166,12 @@ app/
     Modal/               task, project, invoice generation, invoice detail,
                          done tasks, settings
     Ui/                  bottom sheet, fields, icons, pickers, switches
-  composables/         timer tick and actions, theme, cross-window db sync,
+  composables/         timer tick and actions, theme, language and the
+                       formatters that follow it, cross-window db sync,
                        task selection, window title, transient messages
+  locales/             ru.ts and en.ts — every line of the interface
+  plugins/             vue-i18n: the two dictionaries and the Russian
+                       plural rule
   stores/              Pinia: app, projects, tasks, invoices, timer, settings
   repositories/
     db.ts                query helpers over tauri-plugin-sql
@@ -175,7 +184,8 @@ app/
                        v1 → v2 import, statuses, dashboard grouping —
                        alongside the thin Tauri wrappers: sync commands,
                        backup file dialogs, clipboard, window title, the
-                       Android timer notification
+                       Android timer notification, and i18n.ts — translation
+                       for code that runs without a component
   types/               every shared type, one file (nothing else is imported
                        by hand — Nuxt auto-imports the rest)
   assets/css/          theme, app, parts, desktop, panel
@@ -200,7 +210,6 @@ src-tauri/src/
 
 ## Not built yet
 
-- Interface strings are Russian, hard-coded, with no i18n layer
 - Desktop is developed and tested on macOS; the edge panel relies on `macOSPrivateApi` for transparency
 
 ## License

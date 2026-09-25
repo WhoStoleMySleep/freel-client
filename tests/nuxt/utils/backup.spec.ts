@@ -6,7 +6,7 @@ function validBackup(): BackupFile {
     app: 'freel',
     formatVersion: 2,
     exportedAt: '2026-01-01T00:00:00.000Z',
-    settings: { ...{ themeMode: 'system', currency: 'RUB', defaultRate: 2500, hasOnboarded: true, invoiceSeq: 3, compactTaskForm: false } },
+    settings: { ...{ themeMode: 'system', currency: 'RUB', defaultRate: 2500, hasOnboarded: true, invoiceSeq: 3, compactTaskForm: false, language: 'system' } },
     projects: [],
     tasks: [],
     timeEntries: [],
@@ -24,7 +24,7 @@ describe('parseBackup', () => {
   test('не-JSON отвергает с понятной причиной', async () => {
     const { parseBackup } = await import('~/utils/backup')
     const result = parseBackup('не json')
-    expect(result).toMatchObject({ ok: false, error: 'Файл не является корректным JSON.' })
+    expect(result).toMatchObject({ ok: false, error: 'notJson' })
   })
 
   test('чужой файл отвергает', async () => {
@@ -36,7 +36,7 @@ describe('parseBackup', () => {
   test('копию из будущей версии отвергает', async () => {
     const { BACKUP_FORMAT_VERSION, parseBackup } = await import('~/utils/backup')
     const result = parseBackup(JSON.stringify({ ...validBackup(), formatVersion: BACKUP_FORMAT_VERSION + 1 }))
-    expect(result).toMatchObject({ ok: false, error: 'Копия создана более новой версией приложения.' })
+    expect(result).toMatchObject({ ok: false, error: 'tooNew' })
   })
 
   test('копию из прошлой версии принимает', async () => {
@@ -47,7 +47,7 @@ describe('parseBackup', () => {
   test('без списка задач отвергает', async () => {
     const { parseBackup } = await import('~/utils/backup')
     const { tasks: _tasks, ...rest } = validBackup()
-    expect(parseBackup(JSON.stringify(rest))).toMatchObject({ ok: false, error: 'В копии не хватает данных.' })
+    expect(parseBackup(JSON.stringify(rest))).toMatchObject({ ok: false, error: 'incomplete' })
   })
 })
 

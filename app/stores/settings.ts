@@ -1,10 +1,11 @@
-import type { Currency, Settings, ThemeMode } from '~/types'
+import type { Currency, LanguageMode, Settings, ThemeMode } from '~/types'
 
 /** App settings: a single database row every screen reads from. */
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<Settings>({ ...DEFAULT_SETTINGS })
 
   const themeMode = computed(() => settings.value.themeMode)
+  const language = computed(() => settings.value.language)
   const currency = computed(() => settings.value.currency)
   const defaultRate = computed(() => settings.value.defaultRate)
   const hasOnboarded = computed(() => settings.value.hasOnboarded)
@@ -24,6 +25,7 @@ export const useSettingsStore = defineStore('settings', () => {
   return {
     settings,
     themeMode,
+    language,
     currency,
     defaultRate,
     hasOnboarded,
@@ -31,6 +33,7 @@ export const useSettingsStore = defineStore('settings', () => {
     deviceCode,
     apply,
     setThemeMode: (mode: ThemeMode) => patch({ themeMode: mode }),
+    setLanguage: (mode: LanguageMode) => patch({ language: mode }),
     setCurrency: (next: Currency) => patch({ currency: next }),
     setDefaultRate: (rate: number) => patch({ defaultRate: rate }),
     setCompactTaskForm: (value: boolean) => patch({ compactTaskForm: value }),

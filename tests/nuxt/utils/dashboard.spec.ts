@@ -91,11 +91,11 @@ describe('boardGroups', () => {
     expect(boardGroups([])).toEqual([])
   })
 
-  test('колонка несёт подпись и цвет статуса', async () => {
+  test('колонка несёт ключ и цвет статуса', async () => {
     const { boardGroups } = await import('~/utils/dashboard')
-    const { STATUS } = await import('~/utils/status')
+    const { STATUS_COLOR } = await import('~/utils/status')
     const [group] = boardGroups([task('t1', 'in_work', 0)])
-    expect(group?.label).toBe(STATUS.in_work.label)
-    expect(group?.color).toBe(STATUS.in_work.color)
+    expect(group?.key).toBe('in_work')
+    expect(group?.color).toBe(STATUS_COLOR.in_work)
   })
 })

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { textContext } from '../../helpers/textContext'
 import type { Invoice } from '~/types'
 
 const invoice: Invoice = {
@@ -19,23 +20,30 @@ const invoice: Invoice = {
 describe('invoiceToText', () => {
   test('нумерует задачи внутри проекта заново', async () => {
     const { invoiceToText } = await import('~/utils/invoiceText')
-    const text = invoiceToText(invoice)
+    const text = invoiceToText(invoice, textContext())
     expect(text).toContain('1) Чекаут - 2 ч')
     expect(text).toContain('2) Корзина - 1,5 ч')
   })
 
   test('задачу без проекта кладёт в отдельную группу', async () => {
     const { invoiceToText } = await import('~/utils/invoiceText')
-    expect(invoiceToText(invoice)).toContain('Без проекта')
+    expect(invoiceToText(invoice, textContext())).toContain('Без проекта')
   })
 
   test('в итоге суммирует всё время счёта', async () => {
     const { invoiceToText } = await import('~/utils/invoiceText')
-    expect(invoiceToText(invoice)).toContain('Итог: 4,5 ч')
+    expect(invoiceToText(invoice, textContext())).toContain('Итог: 4,5 ч')
   })
 
   test('счёт без позиций сводится к нулевому итогу', async () => {
     const { invoiceToText } = await import('~/utils/invoiceText')
-    expect(invoiceToText({ ...invoice, items: [] })).toBe('Итог: 0 ч')
+    expect(invoiceToText({ ...invoice, items: [] }, textContext())).toBe('Итог: 0 ч')
+  })
+
+  test('в английской локали текст собирается из английского словаря', async () => {
+    const { invoiceToText } = await import('~/utils/invoiceText')
+    const text = invoiceToText(invoice, textContext('en'))
+    expect(text).toContain('No project')
+    expect(text).toContain('Total: 4.5 h')
   })
 })

@@ -95,6 +95,8 @@ pub struct BackupInvoiceItem {
 #[serde(rename_all = "camelCase")]
 pub struct BackupSettings {
     theme_mode: String,
+    #[serde(default = "default_language")]
+    language: String,
     currency: String,
     default_rate: f64,
     #[serde(default)]
@@ -103,6 +105,11 @@ pub struct BackupSettings {
     compact_task_form: bool,
     #[serde(default)]
     updated_at: String,
+}
+
+/// Backups written before the interface had a language setting carry none.
+fn default_language() -> String {
+    "system".to_string()
 }
 
 /// Format v1 backups carry no timestamps on these tables. Derive one from the
@@ -308,13 +315,14 @@ async fn insert_invoice_items(
 /// of a backup — clear any leftover one.
 async fn write_settings(tx: &mut Tx<'_>, s: &BackupSettings) -> Result<()> {
     sqlx::query(
-        "UPDATE settings SET theme_mode = ?, currency = ?, default_rate = ?, has_onboarded = 1,
+        "UPDATE settings SET theme_mode = ?, language = ?, currency = ?, default_rate = ?, has_onboarded = 1,
                              invoice_seq = ?, compact_task_form = ?, updated_at = ?,
                              active_timer_task_id = NULL, active_timer_started_at = NULL,
                              active_timer_accumulated_ms = 0, active_timer_paused = 0
          WHERE id = 1",
     )
     .bind(&s.theme_mode)
+    .bind(&s.language)
     .bind(&s.currency)
     .bind(s.default_rate)
     .bind(s.invoice_seq)
@@ -379,13 +387,41 @@ mod tests {
             .get::<String, _>("title");
         assert_eq!(title, "Новая задача", "старые данные должны быть вытеснены");
 
-        let row = sqlx::query("SELECT currency, invoice_seq, compact_task_form FROM settings")
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+        let row =
+            sqlx::query("SELECT currency, invoice_seq, compact_task_form, language FROM settings")
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert_eq!(row.get::<String, _>("currency"), "USD");
         assert_eq!(row.get::<i64, _>("invoice_seq"), 7);
         assert_eq!(row.get::<i64, _>("compact_task_form"), 1);
+        assert_eq!(
+            row.get::<String, _>("language"),
+            "system",
+            "копия без языка не должна оставлять пустое значение"
+        );
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[tokio::test]
+    async fn restores_the_interface_language() {
+        let (pool, path) = testdb::pool().await;
+        testdb::seed(&pool).await;
+
+        let json = payload_json("p1").replace(
+            r#""themeMode": "dark""#,
+            r#""themeMode": "dark", "language": "en""#,
+        );
+        let payload: BackupPayload = serde_json::from_str(&json).unwrap();
+        apply(&pool, &payload).await.unwrap();
+
+        let language = sqlx::query("SELECT language FROM settings")
+            .fetch_one(&pool)
+            .await
+            .unwrap()
+            .get::<String, _>("language");
+        assert_eq!(language, "en");
 
         let _ = std::fs::remove_file(path);
     }

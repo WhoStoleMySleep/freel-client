@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ReportMode, TaskStatus } from '~/types'
+import type { Locale, ReportMode, TaskStatus } from '~/types'
 
 /**
  * Builds the "what is sitting with you" message: the tasks handed off for
@@ -13,6 +13,8 @@ import type { ReportMode, TaskStatus } from '~/types'
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
+const { t, locale } = useI18n()
+const fmt = useFormat()
 const tasks = useTasksStore()
 const projects = useProjectsStore()
 
@@ -35,7 +37,8 @@ const text = computed(() => reportToText(
     link: task.link,
     minutes: task.minutes,
   })),
-  mode.value
+  mode.value,
+  { locale: locale.value as Locale, t },
 ))
 
 /** Only the detail the chosen mode actually prints is worth warning about. */
@@ -64,8 +67,8 @@ function toggleStatus(status: TaskStatus): void {
 }
 
 function rowDetail(minutes: number, link: string): string {
-  if (mode.value === 'hours') return minutes > 0 ? formatHoursRounded(minutes) : 'часов нет'
-  return link.trim() || 'ссылки нет'
+  if (mode.value === 'hours') return minutes > 0 ? fmt.hours(minutes) : t('report.noHours')
+  return link.trim() || t('report.noLink')
 }
 
 function hasDetail(minutes: number, link: string): boolean {
@@ -81,34 +84,34 @@ async function copy(): Promise<void> {
 
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
-    <UiModalHead title="Отчёт по задачам" @close="emit('close')" />
+    <UiModalHead :title="t('report.title')" @close="emit('close')" />
     <p class="modal-hint">
-      {{ mode === 'hours' ? 'В отчёт идут часы по каждой задаче и общий итог.' : 'Вместо часов в отчёт идёт ссылка на задачу.' }}
-      Отметьте статусы, которые нужно включить.
+      {{ mode === 'hours' ? t('report.hintHours') : t('report.hintLink') }}
+      {{ t('report.hintStatuses') }}
     </p>
 
-    <div class="field-label">Что писать в строке</div>
+    <div class="field-label">{{ t('report.lineLabel') }}</div>
     <div class="chips" style="gap: 5px; margin-bottom: 14px">
-      <UiChip label="Ссылка" :active="mode === 'link'" small @click="mode = 'link'" />
-      <UiChip label="Часы" :active="mode === 'hours'" small @click="mode = 'hours'" />
+      <UiChip :label="t('report.modeLink')" :active="mode === 'link'" small @click="mode = 'link'" />
+      <UiChip :label="t('report.modeHours')" :active="mode === 'hours'" small @click="mode = 'hours'" />
     </div>
 
-    <div class="field-label">Статусы</div>
+    <div class="field-label">{{ t('report.statuses') }}</div>
     <div class="chips" style="gap: 5px; margin-bottom: 14px">
       <UiChip
         v-for="key in DASH_ORDER"
         :key="key"
-        :label="STATUS[key].label"
-        :dot-color="STATUS[key].color"
+        :label="t(`status.${key}`)"
+        :dot-color="STATUS_COLOR[key]"
         :active="statuses.includes(key)"
         small
         @click="toggleStatus(key)"
       />
     </div>
 
-    <div class="field-label">Проект</div>
+    <div class="field-label">{{ t('report.project') }}</div>
     <div class="chips" style="gap: 5px; margin-bottom: 12px">
-      <UiChip label="Все" :active="filterProjectId === ''" small @click="filterProjectId = ''" />
+      <UiChip :label="t('common.all')" :active="filterProjectId === ''" small @click="filterProjectId = ''" />
       <UiChip
         v-for="project in projects.active"
         :key="project.id"
@@ -122,7 +125,7 @@ async function copy(): Promise<void> {
     <UiTaskPicker
       :groups="groups"
       :master="master"
-      empty-text="Нет задач с выбранными статусами по этому фильтру"
+      :empty-text="t('report.empty')"
       @toggle="setMany"
     >
       <template #meta="{ task }">
@@ -134,22 +137,24 @@ async function copy(): Promise<void> {
       <template #trailing="{ task }">
         <span
           class="status-badge"
-          :style="{ background: STATUS[task.status].color + '22', color: STATUS[task.status].color }"
+          :style="{ background: STATUS_COLOR[task.status] + '22', color: STATUS_COLOR[task.status] }"
         >
-          {{ STATUS[task.status].label }}
+          {{ t(`status.${task.status}`) }}
         </span>
       </template>
     </UiTaskPicker>
 
     <div class="sel-summary">
-      <span class="sel-count">Выбрано: {{ chosen.length }}</span>
-      <span v-if="incomplete" class="sel-warn">{{ mode === 'hours' ? 'Без часов' : 'Без ссылки' }}: {{ incomplete }}</span>
+      <span class="sel-count">{{ t('common.selected', { count: chosen.length }) }}</span>
+      <span v-if="incomplete" class="sel-warn">
+        {{ mode === 'hours' ? t('report.missingHours') : t('report.missingLink') }}: {{ incomplete }}
+      </span>
     </div>
 
     <pre v-if="chosen.length" class="report-preview">{{ text }}</pre>
 
     <button class="btn-primary" style="margin-top: 12px" :disabled="!chosen.length" @click="copy">
-      {{ copied ? 'Скопировано' : 'Скопировать отчёт' }}
+      {{ copied ? t('common.copied') : t('report.copy') }}
     </button>
   </UiBottomSheet>
 </template>

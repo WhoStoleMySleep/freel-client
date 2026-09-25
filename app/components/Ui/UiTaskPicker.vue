@@ -11,6 +11,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ toggle: [ids: string[], value: boolean] }>()
 
+const { t } = useI18n()
+
 const visibleIds = computed(() => props.groups.flatMap(group => group.rows.map(row => row.task.id)))
 
 function idsOf(group: TaskGroup): string[] {
@@ -21,7 +23,7 @@ function idsOf(group: TaskGroup): string[] {
 <template>
   <button v-if="master.total > 0" class="master-row" @click="emit('toggle', visibleIds, master.state !== 'all')">
     <UiSelectBox :state="master.state" big />
-    <span class="master-label">{{ master.state === 'all' ? 'Снять выбор со всех' : 'Выбрать все' }}</span>
+    <span class="master-label">{{ master.state === 'all' ? t('picker.clearAll') : t('picker.selectAll') }}</span>
     <span class="counter">{{ master.selected }}/{{ master.total }}</span>
   </button>
 

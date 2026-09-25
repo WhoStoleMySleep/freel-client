@@ -164,6 +164,17 @@ pub fn migrations() -> Vec<Migration> {
             "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "interface language",
+            sql: r#"
+                -- 'system' follows the OS, the same way theme_mode does. Existing
+                -- installations get it too: before this column the interface was
+                -- Russian only, and a Russian system keeps showing Russian.
+                ALTER TABLE settings ADD COLUMN language TEXT NOT NULL DEFAULT 'system';
+            "#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

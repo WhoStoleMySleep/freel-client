@@ -7,6 +7,12 @@ export default defineNuxtConfig({
 
   modules: ['@pinia/nuxt', '@nuxt/eslint'],
 
+  // useI18n рядом с остальными автоимпортами: иначе его пришлось бы
+  // импортировать руками в каждом компоненте, где есть хоть одна строка.
+  imports: {
+    presets: [{ from: 'vue-i18n', imports: ['useI18n'] }],
+  },
+
   eslint: {
     config: { stylistic: false },
   },

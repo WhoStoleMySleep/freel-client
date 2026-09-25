@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import type { BackupFile, SyncStatus, ThemeMode } from '~/types'
+import type { BackupFile, LanguageMode, SyncStatus, ThemeMode } from '~/types'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [], replayOnboarding: [] }>()
 
-const THEME_OPTIONS: { mode: ThemeMode, label: string }[] = [
-  { mode: 'system', label: 'Системная' },
-  { mode: 'dark', label: 'Тёмная' },
-  { mode: 'light', label: 'Светлая' },
-]
+const THEME_MODES: ThemeMode[] = ['system', 'dark', 'light']
+const LANGUAGES: LanguageMode[] = ['system', 'ru', 'en']
 
 type Busy = 'export' | 'import' | 'login' | 'register' | 'sync'
 
@@ -19,10 +16,12 @@ interface Job {
   prefix?: string
 }
 
+const { t } = useI18n()
+const fmt = useFormat()
 const app = useAppStore()
 const settings = useSettingsStore()
 const { demoMode } = storeToRefs(app)
-const { currency, defaultRate, themeMode, compactTaskForm } = storeToRefs(settings)
+const { currency, defaultRate, themeMode, language, compactTaskForm } = storeToRefs(settings)
 
 const rateStr = ref(String(defaultRate.value))
 const busy = ref<Busy | null>(null)
@@ -77,20 +76,20 @@ async function run(job: Job, action: () => Promise<string | null>): Promise<void
 
 const doRegister = () => run({ kind: 'register', flash: flashSync }, async () => {
   await syncRegister(url.value.trim(), email.value.trim(), password.value)
-  return 'Аккаунт создан, теперь войдите'
+  return t('settings.registered')
 })
 
 const doLogin = () => run({ kind: 'login', flash: flashSync }, async () => {
   await syncLogin(url.value.trim(), email.value.trim(), password.value)
   password.value = ''
   await refreshSync()
-  return 'Подключено'
+  return t('settings.connected')
 })
 
 async function doLogout(): Promise<void> {
   await syncLogout().catch(() => {})
   await refreshSync()
-  flashSync('Отключено. Данные остались на устройстве.')
+  flashSync(t('settings.disconnected'))
 }
 
 const doSync = () => run({ kind: 'sync', flash: flashSync }, async () => {
@@ -98,52 +97,55 @@ const doSync = () => run({ kind: 'sync', flash: flashSync }, async () => {
   // The merge rewrote rows underneath the stores, so they have to re-read.
   await app.hydrate()
   await refreshSync()
-  return `Обмен завершён: отправлено ${result.sent}, получено ${result.received}`
+  return t('settings.synced', { sent: result.sent, received: result.received })
 })
 
-const doBackup = () => run({ kind: 'export', flash: flashNotice, prefix: 'Не получилось сохранить: ' }, async () => {
-  const saved = await saveBackup(await app.buildBackup())
-  return saved.status === 'saved' ? 'Копия сохранена' : null
+const doBackup = () => run({ kind: 'export', flash: flashNotice, prefix: t('settings.backupFailed') }, async () => {
+  const saved = await saveBackup(await app.buildBackup(), t('backup.fileName'))
+  return saved.status === 'saved' ? t('settings.backupSaved') : null
 })
 
 /** Restoring replaces everything, so the copy is described before it is applied. */
 function confirmRestore(backup: BackupFile): boolean {
   const summary = summarize(backup)
-  return window.confirm(
-    `В копии: проектов — ${summary.projects}, задач — ${summary.tasks}, счетов — ${summary.invoices}.\n`
-    + `Создана: ${shortDate(summary.exportedAt.slice(0, 10))}.\n\n`
-    + 'Текущие данные будут полностью заменены. Отменить это будет нельзя.'
-  )
+  return window.confirm(t('settings.restoreConfirm', {
+    projects: summary.projects,
+    tasks: summary.tasks,
+    invoices: summary.invoices,
+    date: fmt.shortDate(summary.exportedAt.slice(0, 10)),
+  }))
 }
 
-const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: 'Не получилось восстановить: ' }, async () => {
-  const picked = await pickBackup()
+const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: t('settings.restoreFailed') }, async () => {
+  const picked = await pickBackup(t('backup.fileName'))
   if (picked.status === 'cancelled') return null
-  if (picked.status === 'error') return picked.message
+  if (picked.status === 'error') return t(`backup.${picked.error}`, { detail: picked.detail ?? '' })
   if (!confirmRestore(picked.backup)) return null
   await app.restoreBackup(picked.backup)
   emit('close')
-  return 'Данные восстановлены'
+  return t('settings.restored')
 })
 </script>
 
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
-    <UiModalHead title="Настройки" @close="emit('close')" />
+    <UiModalHead :title="t('settings.title')" @close="emit('close')" />
     <div class="stack" style="gap: 16px">
       <div class="card-box">
-        <div class="card-label" style="margin-bottom: 6px">Стоимость часа по умолчанию</div>
+        <div class="card-label" style="margin-bottom: 6px">{{ t('settings.rate') }}</div>
         <div style="display: flex; align-items: center; gap: 10px">
           <div style="flex: 1">
             <UiField v-model="rateStr" numeric />
           </div>
-          <span style="font-weight: 700; font-size: 18px; color: var(--dim)">{{ currency }}/ч</span>
+          <span style="font-weight: 700; font-size: 18px; color: var(--dim)">
+            {{ t('settings.ratePerHour', { currency }) }}
+          </span>
         </div>
-        <p class="card-note">Подставляется как ставка при создании новой почасовой задачи.</p>
+        <p class="card-note">{{ t('settings.rateHint') }}</p>
       </div>
 
       <div>
-        <span class="field-label">Валюта</span>
+        <span class="field-label">{{ t('settings.currency') }}</span>
         <div class="chips">
           <UiChip
             v-for="code in CURRENCIES"
@@ -156,15 +158,29 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: 'Не 
       </div>
 
       <div>
-        <span class="field-label">Тема</span>
+        <span class="field-label">{{ t('settings.theme') }}</span>
         <div class="chips">
           <UiChip
-            v-for="option in THEME_OPTIONS"
-            :key="option.mode"
-            :label="option.label"
-            :active="themeMode === option.mode"
+            v-for="mode in THEME_MODES"
+            :key="mode"
+            :label="t(`theme.${mode}`)"
+            :active="themeMode === mode"
             grow
-            @click="settings.setThemeMode(option.mode)"
+            @click="settings.setThemeMode(mode)"
+          />
+        </div>
+      </div>
+
+      <div>
+        <span class="field-label">{{ t('settings.language') }}</span>
+        <div class="chips">
+          <UiChip
+            v-for="mode in LANGUAGES"
+            :key="mode"
+            :label="t(`language.${mode}`)"
+            :active="language === mode"
+            grow
+            @click="settings.setLanguage(mode)"
           />
         </div>
       </div>
@@ -172,10 +188,8 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: 'Не 
       <div class="card-box">
         <div class="switch-row">
           <div class="switch-text">
-            <div class="card-label">Компактное добавление задач</div>
-            <p class="card-note" style="margin-top: 4px">
-              В форме новой задачи скрываются ставка, тип ставки и время. Статус сразу «Далее».
-            </p>
+            <div class="card-label">{{ t('settings.compact') }}</div>
+            <p class="card-note" style="margin-top: 4px">{{ t('settings.compactHint') }}</p>
           </div>
           <UiSwitch v-model="compact" />
         </div>
@@ -184,63 +198,58 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: 'Не 
       <div class="card-box">
         <div class="switch-row">
           <div class="switch-text">
-            <div class="card-label">Демо-данные</div>
-            <p class="card-note" style="margin-top: 4px">
-              Показать приложение с примерами проектов и задач. Ваши реальные данные не изменяются и вернутся как были.
-            </p>
+            <div class="card-label">{{ t('settings.demo') }}</div>
+            <p class="card-note" style="margin-top: 4px">{{ t('settings.demoHint') }}</p>
           </div>
           <UiSwitch v-model="demo" />
         </div>
-        <div v-if="demoMode" class="badge-info">Сейчас показаны демо-данные</div>
+        <div v-if="demoMode" class="badge-info">{{ t('settings.demoBadge') }}</div>
       </div>
 
       <div class="card-box">
-        <div class="card-label">Резервная копия</div>
-        <p class="card-note" style="margin-bottom: 12px">
-          Все проекты, задачи, время и счета одним файлом. Восстановление полностью заменяет текущие данные.
-        </p>
+        <div class="card-label">{{ t('settings.backup') }}</div>
+        <p class="card-note" style="margin-bottom: 12px">{{ t('settings.backupHint') }}</p>
         <div class="btn-row">
           <button class="btn-secondary" :disabled="busy !== null" @click="doBackup">
-            {{ busy === 'export' ? 'Готовим…' : 'Сохранить копию' }}
+            {{ busy === 'export' ? t('settings.backupBusy') : t('settings.backupSave') }}
           </button>
           <button class="btn-secondary" :disabled="busy !== null" @click="doRestore">
-            {{ busy === 'import' ? 'Читаем…' : 'Восстановить' }}
+            {{ busy === 'import' ? t('settings.restoreBusy') : t('settings.restore') }}
           </button>
         </div>
         <div v-if="notice" class="badge-info">{{ notice }}</div>
       </div>
 
       <div class="card-box">
-        <div class="card-label">Синхронизация</div>
+        <div class="card-label">{{ t('settings.sync') }}</div>
         <template v-if="sync?.connected">
           <p class="card-note" style="margin-bottom: 12px">
             {{ sync.email }} · {{ sync.url }}
             <br>
-            {{ sync.lastSyncAt ? `Последний обмен: ${sync.lastSyncAt.slice(0, 16).replace('T', ' ')}` : 'Обмена ещё не было' }}
+            {{ sync.lastSyncAt
+              ? t('settings.lastSync', { at: sync.lastSyncAt.slice(0, 16).replace('T', ' ') })
+              : t('settings.neverSynced') }}
           </p>
           <div class="btn-row">
             <button class="btn-secondary" :disabled="busy !== null" @click="doSync">
-              {{ busy === 'sync' ? 'Обмен…' : 'Синхронизировать' }}
+              {{ busy === 'sync' ? t('settings.syncBusy') : t('settings.syncNow') }}
             </button>
-            <button class="btn-secondary" :disabled="busy !== null" @click="doLogout">Отключить</button>
+            <button class="btn-secondary" :disabled="busy !== null" @click="doLogout">{{ t('settings.disconnect') }}</button>
           </div>
         </template>
         <template v-else>
-          <p class="card-note" style="margin-bottom: 10px">
-            Данные останутся на устройстве. Аккаунт нужен только чтобы держать их
-            одинаковыми на телефоне и компьютере.
-          </p>
+          <p class="card-note" style="margin-bottom: 10px">{{ t('settings.syncHint') }}</p>
           <div class="stack" style="gap: 8px">
-            <UiField v-model="url" placeholder="https://адрес-сервера" />
-            <UiField v-model="email" placeholder="Почта" />
-            <UiField v-model="password" placeholder="Пароль" secure />
+            <UiField v-model="url" :placeholder="t('settings.serverPlaceholder')" />
+            <UiField v-model="email" :placeholder="t('settings.emailPlaceholder')" />
+            <UiField v-model="password" :placeholder="t('settings.passwordPlaceholder')" secure />
           </div>
           <div class="btn-row" style="margin-top: 10px">
             <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doLogin">
-              {{ busy === 'login' ? 'Вход…' : 'Войти' }}
+              {{ busy === 'login' ? t('settings.loginBusy') : t('settings.login') }}
             </button>
             <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doRegister">
-              {{ busy === 'register' ? 'Создаём…' : 'Создать аккаунт' }}
+              {{ busy === 'register' ? t('settings.registerBusy') : t('settings.register') }}
             </button>
           </div>
         </template>
@@ -248,7 +257,7 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: 'Не 
       </div>
 
       <button class="btn-secondary" style="width: 100%" @click="emit('replayOnboarding')">
-        Показать экраны запуска заново
+        {{ t('settings.replayOnboarding') }}
       </button>
     </div>
   </UiBottomSheet>

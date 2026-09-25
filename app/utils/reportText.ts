@@ -1,13 +1,13 @@
-import type { ReportMode, ReportRow } from '~/types'
+import type { ReportMode, ReportRow, TextContext } from '~/types'
 
-function detailOf(row: ReportRow, mode: ReportMode): string {
+function detailOf(row: ReportRow, mode: ReportMode, ctx: TextContext): string {
   if (mode !== 'hours') return row.link.trim()
-  return row.minutes > 0 ? formatHoursRounded(row.minutes) : ''
+  return row.minutes > 0 ? formatHoursRounded(row.minutes, ctx.locale) : ''
 }
 
-function projectBlock(name: string, rows: ReportRow[], mode: ReportMode): string {
+function projectBlock(name: string, rows: ReportRow[], mode: ReportMode, ctx: TextContext): string {
   const lines = rows.map((row, i) => {
-    const detail = detailOf(row, mode)
+    const detail = detailOf(row, mode, ctx)
     return `${i + 1}) ${row.title}${detail ? ` - ${detail}` : ''}`
   })
   return [name, ...lines].join('\n')
@@ -17,14 +17,14 @@ function projectBlock(name: string, rows: ReportRow[], mode: ReportMode): string
  * Renders tasks handed off for review as plain text for sharing, grouped by
  * project:
  *
- *   Проект
- *   1) задача - https://...
- *   2) задача без ссылки
+ *   Project
+ *   1) task - https://...
+ *   2) task with no link
  *
- *   Другой проект
- *   1) задача - https://...
+ *   Another project
+ *   1) task - https://...
  *
- *   Всего задач: 3
+ *   Tasks in total: 3
  *
  * The invoice text puts hours after each task because that is what the client
  * pays for. A review report is read, not paid: the useful detail is usually
@@ -35,12 +35,14 @@ function projectBlock(name: string, rows: ReportRow[], mode: ReportMode): string
  * A row missing the detail of the current mode is listed bare rather than
  * padded with a placeholder — the modal warns about those before sending.
  */
-export function reportToText(rows: ReportRow[], mode: ReportMode = 'link'): string {
-  const blocks = [...groupByProjectName(rows)].map(([name, items]) => projectBlock(name, items, mode))
+export function reportToText(rows: ReportRow[], mode: ReportMode, ctx: TextContext): string {
+  const groups = groupByProjectName(rows, ctx.t('invoice.unnamedProject'))
+  const blocks = [...groups].map(([name, items]) => projectBlock(name, items, mode, ctx))
 
-  const totals = [`Всего задач: ${rows.length}`]
+  const totals = [ctx.t('report.totalTasks', { count: rows.length })]
   if (mode === 'hours') {
-    totals.push(`Итог: ${formatHoursRounded(rows.reduce((sum, row) => sum + row.minutes, 0))}`)
+    const worked = rows.reduce((sum, row) => sum + row.minutes, 0)
+    totals.push(ctx.t('report.total', { hours: formatHoursRounded(worked, ctx.locale) }))
   }
 
   return [...blocks, totals.join('\n')].join('\n\n')

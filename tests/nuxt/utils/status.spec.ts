@@ -30,8 +30,8 @@ describe('наборы статусов', () => {
     expect(COUNTED_STATUSES).not.toContain('done')
   })
 
-  test('у каждого статуса есть подпись', async () => {
-    const { STATUS, STEP_ORDER } = await import('~/utils/status')
-    for (const status of STEP_ORDER) expect(STATUS[status].label.length).toBeGreaterThan(0)
+  test('у каждого статуса есть цвет', async () => {
+    const { STATUS_COLOR, STEP_ORDER } = await import('~/utils/status')
+    for (const status of STEP_ORDER) expect(STATUS_COLOR[status].length).toBeGreaterThan(0)
   })
 })
