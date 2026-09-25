@@ -133,9 +133,9 @@ Installers are built by `.github/workflows/release.yml`, not locally: Windows ne
 | macOS, `aarch64` and `x86_64` | `.dmg` |
 | Ubuntu 22.04 | `.deb` |
 | Windows | `.exe` (NSIS) |
-| Ubuntu, Android build | `.apk` |
+| Ubuntu, Android build | four `.apk`, one per ABI |
 
-One format per system, chosen with `--bundles`: left alone, Tauri emits every format it knows, and the extra ones cost more than they give. `.AppImage` carries its own copy of webkit2gtk and weighs ten times the `.deb` that installs the same app; `.msi` duplicates the `.exe`; `.rpm` duplicates the `.deb`. Ubuntu 22.04 rather than the newest one because the `.deb` links against the build machine's glibc, and a newer one stops installing on older systems. Adding a format back is one word in the matrix.
+One format per system, chosen with `--bundles`: left alone, Tauri emits every format it knows, and the extra ones cost more than they give. `.AppImage` carries its own copy of webkit2gtk and weighs ten times the `.deb` that installs the same app; `.msi` duplicates the `.exe`; `.rpm` duplicates the `.deb`. Ubuntu 22.04 rather than the newest one because the `.deb` links against the build machine's glibc, and a newer one stops installing on older systems. Adding a format back is one word in the matrix. Android splits the other way, with `--split-per-abi`: a single APK carries native libraries for all four ABIs and weighs 78 MB, where a phone needs one set and twenty-odd MB. Each file is named after the ABI read out of the package itself, since Gradle calls the same builds `arm64` and `arm` while the phone calls them `arm64-v8a` and `armeabi-v7a`.
 
 Nothing is code-signed. macOS quarantines an unsigned app on download — `xattr -dr com.apple.quarantine "/Applications/freel (tauri).app"` is what clears it — and Windows shows a SmartScreen warning. Signing needs a paid certificate on both platforms.
 

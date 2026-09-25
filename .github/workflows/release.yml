@@ -80,27 +80,29 @@ jobs:
           args: --bundles ${{ matrix.bundles }} ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
 
       # upload-artifact сохраняет путь от корня репозитория, поэтому установщик
-      # переезжает в отдельную папку: иначе внутри архива он лежит в самом конце
-      # цепочки src-tauri/target/…/bundle/. Путь задан до каталога формата —
-      # рядом Tauri оставляет и распакованный пакет, и временный образ, из
-      # которого собирается dmg, а в архиве нужен ровно один файл.
+      # переезжает отдельно: иначе внутри архива он лежит в самом конце цепочки
+      # src-tauri/target/…/bundle/. Каталог берётся вне репозитория: внутри после
+      # сборки уже лежит dist — симлинк на .output/public, его создаёт Nuxt.
+      #
+      # Путь задан до каталога формата: рядом Tauri оставляет и распакованный
+      # пакет, и временный образ, из которого собирается dmg, а нужен один файл.
       - name: Collect the installer
         if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
-          mkdir dist
+          mkdir -p "$RUNNER_TEMP/installer"
           find src-tauri/target -type f \
             \( -path '*/release/bundle/dmg/*.dmg' \
             -o -path '*/release/bundle/deb/*.deb' \
             -o -path '*/release/bundle/nsis/*.exe' \) \
-            -exec mv {} dist/ \;
-          ls -la dist
+            -exec mv {} "$RUNNER_TEMP/installer/" \;
+          ls -la "$RUNNER_TEMP/installer"
 
       - if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: freel-${{ matrix.label }}
-          path: dist/*
+          path: ${{ runner.temp }}/installer/*
           if-no-files-found: error
 
   android:
@@ -161,26 +163,33 @@ jobs:
           printf 'keyAlias=%s\npassword=%s\nstoreFile=%s\n' \
             "$ALIAS" "$PASSWORD" "$PWD/release.jks" > keystore.properties
 
-      - run: pnpm tauri android build --apk
+      # Без разделения выходит один APK на все ABI: телефону нужны нативные
+      # библиотеки под его процессор, а несёт он ещё три чужих комплекта и
+      # весит 78 МБ вместо двадцати с небольшим.
+      - run: pnpm tauri android build --apk --split-per-abi
         env:
           NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
 
-      - name: Name the APK after the release
-        id: apk
+      # Gradle зовёт варианты сборки arm64 и arm, тогда как система на телефоне
+      # называет те же наборы arm64-v8a и armeabi-v7a. В имени файла стоит ABI,
+      # прочитанный из самого пакета, — по нему человек и выбирает, что качать.
+      - name: Name the APKs after the release
         run: |
-          src=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
-          out="freel-${GITHUB_REF_NAME}.apk"
-          mv "$src" "$out"
-          echo "path=$out" >> "$GITHUB_OUTPUT"
+          mkdir -p "$RUNNER_TEMP/apk"
+          for f in src-tauri/gen/android/app/build/outputs/apk/*/release/*-release.apk; do
+            abi=$(unzip -Z1 "$f" 'lib/*' | cut -d/ -f2 | sort -u | head -1)
+            mv "$f" "$RUNNER_TEMP/apk/freel-${GITHUB_REF_NAME}-${abi}.apk"
+          done
+          ls -la "$RUNNER_TEMP/apk"
 
       - if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" "${{ steps.apk.outputs.path }}" --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" "$RUNNER_TEMP"/apk/*.apk --clobber
 
       - if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: freel-android
-          path: ${{ steps.apk.outputs.path }}
+          path: ${{ runner.temp }}/apk/*
           if-no-files-found: error
