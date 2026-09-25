@@ -144,7 +144,13 @@ Installers are built by `.github/workflows/release.yml`, not locally: Windows ne
 
 One format per system, chosen with `--bundles`: left alone, Tauri emits every format it knows, and the extra ones cost more than they give. `.AppImage` carries its own copy of webkit2gtk and weighs ten times the `.deb` that installs the same app; `.msi` duplicates the `.exe`; `.rpm` duplicates the `.deb`. Ubuntu 22.04 rather than the newest one because the `.deb` links against the build machine's glibc, and a newer one stops installing on older systems. Adding a format back is one word in the matrix. Android splits the other way, with `--split-per-abi`: a single APK carries native libraries for all four ABIs and weighs 78 MB, where a phone needs one set and twenty-odd MB. Each file is named after the ABI read out of the package itself, since Gradle calls the same builds `arm64` and `arm` while the phone calls them `arm64-v8a` and `armeabi-v7a`.
 
-Nothing is code-signed. macOS quarantines an unsigned app on download — `xattr -dr com.apple.quarantine "/Applications/freel (tauri).app"` is what clears it — and Windows shows a SmartScreen warning. Signing needs a paid certificate on both platforms.
+Nothing is code-signed, and on Apple Silicon macOS words that as **“freel (tauri)” is damaged and can't be opened** rather than as anything about an unknown developer. The app is fine; what it carries is the quarantine attribute every download gets. Clearing it has to happen after the app is in `/Applications`, since the mounted `.dmg` is read-only:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/freel (tauri).app"
+```
+
+Windows shows a SmartScreen warning instead — *More info* → *Run anyway*. Signing needs a paid certificate on both platforms.
 
 Android is the exception: an unsigned APK will not install at all, and Android only accepts an update whose signature matches the one already on the device — a different key means uninstalling the app, and the database with it. So the key is permanent and lives in three repository secrets, which the release job unpacks into `keystore.properties`:
 
@@ -155,6 +161,14 @@ Android is the exception: an unsigned APK will not install at all, and Android o
 | `ANDROID_KEY_PASSWORD` | the password for both store and key |
 
 Generated once with `keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias freel`. Keep the file and the password somewhere they cannot be lost — there is no way to re-issue them.
+
+A copy signed with any other key — a local debug build, or one from before this keystore existed — has to go before a release APK will install. Android refuses with **App not installed as package conflicts with an existing package**, and says the same whether the old copy is visible or not: an install in a work profile, a cloned app or a vendor's secure folder holds the package name while showing nothing in the launcher. It can be found and removed over adb:
+
+```bash
+adb shell pm list packages -u | grep freel          # includes what is not installed here
+adb shell dumpsys package com.whostolemysleep.freeltauri | grep 'User [0-9]*:'
+adb shell pm uninstall --user <id> com.whostolemysleep.freeltauri
+```
 
 ## Project structure
 
