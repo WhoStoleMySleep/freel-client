@@ -178,9 +178,12 @@ jobs:
       - name: Name the APKs after the release
         run: |
           mkdir -p "$RUNNER_TEMP/apk"
+          # У тега слэшей не бывает, а у ветки при ручном запуске — сплошь и
+          # рядом, и в имени файла они превращаются в несуществующие каталоги.
+          name="${GITHUB_REF_NAME//\//-}"
           for f in src-tauri/gen/android/app/build/outputs/apk/*/release/*-release.apk; do
             abi=$(unzip -Z1 "$f" 'lib/*' | cut -d/ -f2 | sort -u | head -1)
-            mv "$f" "$RUNNER_TEMP/apk/freel-${GITHUB_REF_NAME}-${abi}.apk"
+            mv "$f" "$RUNNER_TEMP/apk/freel-${name}-${abi}.apk"
           done
           ls -la "$RUNNER_TEMP/apk"
 
