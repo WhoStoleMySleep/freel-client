@@ -3,7 +3,8 @@ export function useTimerInWindowTitle(): void {
   if (!isDesktopApp()) return
 
   const { active, task } = storeToRefs(useTimerStore())
-  const name = computed(() => task.value?.title ?? 'Задача')
+  const { t } = useI18n()
+  const name = computed(() => task.value?.title ?? t('app.taskFallback'))
   let tick: ReturnType<typeof setInterval> | null = null
 
   function stop(): void {
@@ -19,7 +20,7 @@ export function useTimerInWindowTitle(): void {
       return
     }
     const clock = formatClock(Math.floor(timerElapsedMs(timer, Date.now()) / 1000))
-    void setWindowTitle(`${clock}${timer.paused ? ' (пауза)' : ''} · ${name.value} — ${APP_TITLE}`)
+    void setWindowTitle(`${clock}${timer.paused ? ` (${t('app.paused')})` : ''} · ${name.value} — ${APP_TITLE}`)
   }
 
   watch([active, name], () => {

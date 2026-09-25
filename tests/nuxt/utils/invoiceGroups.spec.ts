@@ -10,24 +10,24 @@ const items: InvoiceItem[] = [
 describe('groupInvoiceItems', () => {
   test('пустой счёт не даёт групп', async () => {
     const { groupInvoiceItems } = await import('~/utils/invoiceGroups')
-    expect(groupInvoiceItems([])).toEqual([])
+    expect(groupInvoiceItems([], 'Без проекта')).toEqual([])
   })
 
   test('группы идут в порядке первого появления проекта', async () => {
     const { groupInvoiceItems } = await import('~/utils/invoiceGroups')
-    expect(groupInvoiceItems(items).map(g => g.name)).toEqual(['Acme', 'Fin'])
+    expect(groupInvoiceItems(items, 'Без проекта').map(g => g.name)).toEqual(['Acme', 'Fin'])
   })
 
   test('подытог складывает все строки проекта', async () => {
     const { groupInvoiceItems } = await import('~/utils/invoiceGroups')
-    const [acme] = groupInvoiceItems(items)
+    const [acme] = groupInvoiceItems(items, 'Без проекта')
     expect(acme?.subtotal).toBe(3750)
     expect(acme?.items).toHaveLength(2)
   })
 
   test('строка без проекта попадает в общую группу', async () => {
     const { groupInvoiceItems } = await import('~/utils/invoiceGroups')
-    const groups = groupInvoiceItems([{ ...items[0]!, projectName: '' }])
+    const groups = groupInvoiceItems([{ ...items[0]!, projectName: '' }], 'Без проекта')
     expect(groups[0]?.name).toBe('Без проекта')
   })
 })

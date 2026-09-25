@@ -18,24 +18,24 @@ export interface DemoData {
 
 function demoProjects(): Project[] {
   return [
-    { id: newId(), name: 'Acme Store', description: 'Интернет-магазин, e-commerce', archived: false, createdAt: daysAgoIso(90), updatedAt: daysAgoIso(90) },
-    { id: newId(), name: 'FinTech Dashboard', description: 'Аналитика для банка', archived: false, createdAt: daysAgoIso(60), updatedAt: daysAgoIso(60) },
-    { id: newId(), name: 'Старый лендинг', description: 'Промо-сайт 2024', archived: true, createdAt: daysAgoIso(200), updatedAt: daysAgoIso(150) },
+    { id: newId(), name: translate('demo.acme'), description: translate('demo.acmeDescription'), archived: false, createdAt: daysAgoIso(90), updatedAt: daysAgoIso(90) },
+    { id: newId(), name: translate('demo.fin'), description: translate('demo.finDescription'), archived: false, createdAt: daysAgoIso(60), updatedAt: daysAgoIso(60) },
+    { id: newId(), name: translate('demo.old'), description: translate('demo.oldDescription'), archived: true, createdAt: daysAgoIso(200), updatedAt: daysAgoIso(150) },
   ]
 }
 
 function demoTasks(acme: string, fin: string, old: string): Task[] {
   const now = new Date().toISOString()
   return [
-    { id: newId(), projectId: acme, title: 'Оплата картой в чекауте', description: 'Интеграция эквайринга', link: 'https://tracker/AC-201', rateType: 'hourly', rate: 2500, minutes: 320, status: 'waiting_payment', createdAt: daysAgoIso(16), updatedAt: daysAgoIso(1) },
-    { id: newId(), projectId: acme, title: 'Багфикс корзины', description: 'Не пересчитывается сумма', link: 'https://tracker/AC-214', rateType: 'hourly', rate: 2500, minutes: 95, status: 'in_work', createdAt: now, updatedAt: now },
-    { id: newId(), projectId: fin, title: 'Интеграция CDEK', description: 'Расчёт доставки', link: 'https://tracker/FT-88', rateType: 'fixed', rate: 45000, minutes: 610, status: 'review_code', createdAt: daysAgoIso(28), updatedAt: daysAgoIso(20) },
-    { id: newId(), projectId: fin, title: 'Рефактор авторизации', description: 'OAuth + 2FA', link: 'https://tracker/FT-90', rateType: 'hourly', rate: 3000, minutes: 180, status: 'review_managers', createdAt: daysAgoIso(8), updatedAt: daysAgoIso(2) },
-    { id: newId(), projectId: fin, title: 'Экспорт отчётов', description: 'PDF/XLSX выгрузка', link: 'https://tracker/FT-95', rateType: 'fixed', rate: 30000, minutes: 240, status: 'waiting_upload', createdAt: daysAgoIso(21), updatedAt: daysAgoIso(15) },
-    { id: newId(), projectId: acme, title: 'Правки по дизайну', description: 'Ревизия макетов', link: 'https://tracker/AC-220', rateType: 'hourly', rate: 2200, minutes: 60, status: 'paused', createdAt: daysAgoIso(6), updatedAt: daysAgoIso(3) },
-    { id: newId(), projectId: fin, title: 'Настроить CI/CD', description: 'GitHub Actions', link: 'https://tracker/FT-99', rateType: 'hourly', rate: 3200, minutes: 0, status: 'next', createdAt: now, updatedAt: now },
-    { id: newId(), projectId: acme, title: 'Push-уведомления', description: 'FCM интеграция', link: 'https://tracker/AC-225', rateType: 'fixed', rate: 18000, minutes: 140, status: 'waiting_payment', createdAt: daysAgoIso(12), updatedAt: daysAgoIso(9) },
-    { id: newId(), projectId: old, title: 'Вёрстка промо-страницы', description: 'Готово, сдано', link: 'https://tracker/OL-12', rateType: 'fixed', rate: 25000, minutes: 500, status: 'done', createdAt: daysAgoIso(57), updatedAt: daysAgoIso(50) },
+    { id: newId(), projectId: acme, title: translate('demo.task1'), description: translate('demo.task1Description'), link: 'https://tracker/AC-201', rateType: 'hourly', rate: 2500, minutes: 320, status: 'waiting_payment', createdAt: daysAgoIso(16), updatedAt: daysAgoIso(1) },
+    { id: newId(), projectId: acme, title: translate('demo.task2'), description: translate('demo.task2Description'), link: 'https://tracker/AC-214', rateType: 'hourly', rate: 2500, minutes: 95, status: 'in_work', createdAt: now, updatedAt: now },
+    { id: newId(), projectId: fin, title: translate('demo.task3'), description: translate('demo.task3Description'), link: 'https://tracker/FT-88', rateType: 'fixed', rate: 45000, minutes: 610, status: 'review_code', createdAt: daysAgoIso(28), updatedAt: daysAgoIso(20) },
+    { id: newId(), projectId: fin, title: translate('demo.task4'), description: 'OAuth + 2FA', link: 'https://tracker/FT-90', rateType: 'hourly', rate: 3000, minutes: 180, status: 'review_managers', createdAt: daysAgoIso(8), updatedAt: daysAgoIso(2) },
+    { id: newId(), projectId: fin, title: translate('demo.task5'), description: translate('demo.task5Description'), link: 'https://tracker/FT-95', rateType: 'fixed', rate: 30000, minutes: 240, status: 'waiting_upload', createdAt: daysAgoIso(21), updatedAt: daysAgoIso(15) },
+    { id: newId(), projectId: acme, title: translate('demo.task6'), description: translate('demo.task6Description'), link: 'https://tracker/AC-220', rateType: 'hourly', rate: 2200, minutes: 60, status: 'paused', createdAt: daysAgoIso(6), updatedAt: daysAgoIso(3) },
+    { id: newId(), projectId: fin, title: translate('demo.task7'), description: 'GitHub Actions', link: 'https://tracker/FT-99', rateType: 'hourly', rate: 3200, minutes: 0, status: 'next', createdAt: now, updatedAt: now },
+    { id: newId(), projectId: acme, title: translate('demo.task8'), description: translate('demo.task8Description'), link: 'https://tracker/AC-225', rateType: 'fixed', rate: 18000, minutes: 140, status: 'waiting_payment', createdAt: daysAgoIso(12), updatedAt: daysAgoIso(9) },
+    { id: newId(), projectId: old, title: translate('demo.task9'), description: translate('demo.task9Description'), link: 'https://tracker/OL-12', rateType: 'fixed', rate: 25000, minutes: 500, status: 'done', createdAt: daysAgoIso(57), updatedAt: daysAgoIso(50) },
   ]
 }
 
@@ -44,18 +44,18 @@ function demoInvoices(): Invoice[] {
   // layout has something to group.
   const mixedId = newId()
   const mixedItems: InvoiceItem[] = [
-    { id: newId(), invoiceId: mixedId, title: 'Лендинг акции', projectName: 'Acme Store', minutes: 380, amount: 14200 },
-    { id: newId(), invoiceId: mixedId, title: 'A/B тесты', projectName: 'Acme Store', minutes: 180, amount: 6600 },
-    { id: newId(), invoiceId: mixedId, title: 'Правки виджета', projectName: 'FinTech Dashboard', minutes: 120, amount: 6000 },
+    { id: newId(), invoiceId: mixedId, title: translate('demo.item1'), projectName: translate('demo.acme'), minutes: 380, amount: 14200 },
+    { id: newId(), invoiceId: mixedId, title: translate('demo.item2'), projectName: translate('demo.acme'), minutes: 180, amount: 6600 },
+    { id: newId(), invoiceId: mixedId, title: translate('demo.item3'), projectName: translate('demo.fin'), minutes: 120, amount: 6000 },
   ]
   const finId = newId()
   const finItems: InvoiceItem[] = [
-    { id: newId(), invoiceId: finId, title: 'Онбординг', projectName: 'FinTech Dashboard', minutes: 660, amount: 33000 },
-    { id: newId(), invoiceId: finId, title: 'Мелкие правки', projectName: 'FinTech Dashboard', minutes: 150, amount: 7500 },
+    { id: newId(), invoiceId: finId, title: translate('demo.item4'), projectName: translate('demo.fin'), minutes: 660, amount: 33000 },
+    { id: newId(), invoiceId: finId, title: translate('demo.item5'), projectName: translate('demo.fin'), minutes: 150, amount: 7500 },
   ]
   return [
-    { id: mixedId, number: '#00122', projectName: 'Разные проекты', dayKey: daysAgoDayKey(14), status: 'sent', factual: null, total: 26800, items: mixedItems },
-    { id: finId, number: '#00121', projectName: 'FinTech Dashboard', dayKey: daysAgoDayKey(24), status: 'paid', factual: 38500, total: 40500, items: finItems },
+    { id: mixedId, number: '#00122', projectName: translate('invoice.mixedProjects'), dayKey: daysAgoDayKey(14), status: 'sent', factual: null, total: 26800, items: mixedItems },
+    { id: finId, number: '#00121', projectName: translate('demo.fin'), dayKey: daysAgoDayKey(24), status: 'paid', factual: 38500, total: 40500, items: finItems },
   ]
 }
 

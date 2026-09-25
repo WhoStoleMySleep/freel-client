@@ -10,14 +10,16 @@ import type { ActiveTimer } from '~/types'
 let posted: string | null = null
 
 /** Everything the Android notification shows besides the task and the clock. */
-const LABELS = {
-  pausedLabel: 'На паузе',
-  runningLabel: 'Идёт запись времени',
-  pauseActionLabel: 'Пауза',
-  resumeActionLabel: 'Продолжить',
-  stopActionLabel: 'Остановить',
-  channelName: 'Таймер задачи',
-} as const
+function labels(): Record<string, string> {
+  return {
+    pausedLabel: translate('timer.paused'),
+    runningLabel: translate('timer.running'),
+    pauseActionLabel: translate('timer.pause'),
+    resumeActionLabel: translate('timer.resume'),
+    stopActionLabel: translate('timer.stop'),
+    channelName: translate('timer.channel'),
+  }
+}
 
 /**
  * Posts the ongoing notification. The elapsed time is rendered by Android's
@@ -26,14 +28,14 @@ const LABELS = {
  */
 export async function showTimerNotification(taskTitle: string, timer: ActiveTimer): Promise<void> {
   if (!isTauri()) return
-  const signature = `${taskTitle} ${timer.paused} ${timer.startedAt} ${timer.accumulatedMs}`
+  const signature = `${taskTitle} ${timer.paused} ${timer.startedAt} ${timer.accumulatedMs} ${currentLocale()}`
   if (signature === posted) return
   // Fold banked time into the base so the chronometer shows total session time.
   const runningMs = timer.paused ? 0 : Date.now() - new Date(timer.startedAt).getTime()
   const baseMs = Date.now() - (timer.accumulatedMs + runningMs)
   try {
     await invoke('plugin:timer|show', {
-      args: { title: taskTitle, baseMs: Math.round(baseMs), paused: timer.paused, ...LABELS },
+      args: { title: taskTitle, baseMs: Math.round(baseMs), paused: timer.paused, ...labels() },
     })
     posted = signature
   }

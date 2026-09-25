@@ -6,10 +6,10 @@ type Tab = 'dash' | 'projects' | 'billing'
 /** The splash stays up this long even if the data is ready sooner. */
 const MIN_SPLASH_MS = 2400
 
-const TABS: { key: Tab, icon: IconName, label: string }[] = [
-  { key: 'dash', icon: 'tab-dash', label: 'Главная' },
-  { key: 'projects', icon: 'tab-projects', label: 'Проекты' },
-  { key: 'billing', icon: 'tab-billing', label: 'Счета' },
+const TABS: { key: Tab, icon: IconName }[] = [
+  { key: 'dash', icon: 'tab-dash' },
+  { key: 'projects', icon: 'tab-projects' },
+  { key: 'billing', icon: 'tab-billing' },
 ]
 
 const app = useAppStore()
@@ -20,7 +20,9 @@ const tab = ref<Tab>('dash')
 const minElapsed = ref(false)
 const error = ref<string | null>(null)
 
+const { t } = useI18n()
 const isDark = useResolvedTheme()
+useLocale()
 useTimerInWindowTitle()
 useDbSync()
 useTimerActions()
@@ -49,14 +51,14 @@ watch([ready, minElapsed], () => {
 <template>
   <div v-if="error" class="screen">
     <div class="empty">
-      <div class="empty-title">Ошибка запуска</div>
+      <div class="empty-title">{{ t('app.startupError') }}</div>
       <p class="empty-text">{{ error }}</p>
     </div>
   </div>
 
   <div v-else-if="phase === 'loading'" class="loading">
     <div class="wordmark">freel</div>
-    <div class="loading-sub">УЧЁТ ЧАСОВ И СЧЕТОВ ДЛЯ ФРИЛАНСЕРА</div>
+    <div class="loading-sub">{{ t('app.tagline') }}</div>
   </div>
 
   <ScreenOnboarding v-else-if="phase === 'onboarding'" @finish="app.setPhase('app')" />
@@ -75,7 +77,7 @@ watch([ready, minElapsed], () => {
         @click="tab = item.key"
       >
         <UiIcon :name="item.icon" />
-        {{ item.label }}
+        {{ t(`tabs.${item.key}`) }}
       </button>
     </nav>
   </div>

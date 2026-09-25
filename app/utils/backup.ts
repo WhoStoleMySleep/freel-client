@@ -1,4 +1,4 @@
-import type { BackupFile, BackupSummary } from '~/types'
+import type { BackupError, BackupFile, BackupSummary } from '~/types'
 
 export const BACKUP_APP_ID = 'freel'
 /**
@@ -12,28 +12,33 @@ function isArray(v: unknown): v is unknown[] {
   return Array.isArray(v)
 }
 
-/** Validates a parsed JSON blob, returning the backup or an error message. */
-export function parseBackup(raw: string): { ok: true; data: BackupFile } | { ok: false; error: string } {
+/**
+ * Validates a parsed JSON blob, returning the backup or why it was rejected.
+ *
+ * The reason is a code rather than a sentence: this runs far from the
+ * interface, which is where the message has to be put into words.
+ */
+export function parseBackup(raw: string): { ok: true; data: BackupFile } | { ok: false; error: BackupError } {
   let json: unknown
   try {
     json = JSON.parse(raw)
   } catch {
-    return { ok: false, error: 'Файл не является корректным JSON.' }
+    return { ok: false, error: 'notJson' }
   }
 
   if (typeof json !== 'object' || json === null) {
-    return { ok: false, error: 'Файл повреждён.' }
+    return { ok: false, error: 'corrupt' }
   }
   const backup = json as Partial<BackupFile>
 
   if (backup.app !== BACKUP_APP_ID) {
-    return { ok: false, error: 'Это не резервная копия freel.' }
+    return { ok: false, error: 'foreign' }
   }
   if (typeof backup.formatVersion !== 'number' || backup.formatVersion > BACKUP_FORMAT_VERSION) {
-    return { ok: false, error: 'Копия создана более новой версией приложения.' }
+    return { ok: false, error: 'tooNew' }
   }
   if (!backup.settings || !isArray(backup.projects) || !isArray(backup.tasks) || !isArray(backup.invoices) || !isArray(backup.invoiceItems) || !isArray(backup.timeEntries)) {
-    return { ok: false, error: 'В копии не хватает данных.' }
+    return { ok: false, error: 'incomplete' }
   }
 
   return { ok: true, data: json as BackupFile }

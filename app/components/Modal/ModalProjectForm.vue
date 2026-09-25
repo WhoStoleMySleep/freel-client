@@ -2,6 +2,7 @@
 const props = defineProps<{ open: boolean, projectId: string | null }>()
 const emit = defineEmits<{ close: [] }>()
 
+const { t } = useI18n()
 const projects = useProjectsStore()
 const project = computed(() => (props.projectId ? projects.byId.get(props.projectId) ?? null : null))
 
@@ -26,7 +27,7 @@ async function save(): Promise<void> {
 async function confirmDelete(): Promise<void> {
   const current = project.value
   if (!current) return
-  if (!window.confirm('Удалить проект навсегда? Все задачи этого проекта будут безвозвратно удалены.')) return
+  if (!window.confirm(t('projectForm.confirmDelete'))) return
   await projects.removeForever(current.id)
   emit('close')
 }
@@ -34,26 +35,26 @@ async function confirmDelete(): Promise<void> {
 
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
-    <UiModalHead :title="project ? 'Проект' : 'Новый проект'" @close="emit('close')" />
+    <UiModalHead :title="project ? t('projectForm.edit') : t('projectForm.create')" @close="emit('close')" />
     <div class="stack">
-      <UiField v-model="name" label="Название проекта" />
-      <UiField v-model="description" label="Описание (опционально)" multiline />
+      <UiField v-model="name" :label="t('projectForm.name')" />
+      <UiField v-model="description" :label="t('projectForm.description')" multiline />
 
       <button class="btn-primary" @click="save">
-        {{ project ? 'Сохранить' : 'Создать' }}
+        {{ project ? t('common.save') : t('common.create') }}
       </button>
 
       <template v-if="project">
         <div class="btn-row">
           <button class="btn-secondary" @click="projects.setArchived(project.id, !project.archived)">
-            {{ project.archived ? 'Восстановить из архива' : 'Архивировать проект' }}
+            {{ project.archived ? t('projectForm.unarchive') : t('projectForm.archive') }}
           </button>
           <button v-if="project.archived" class="btn-secondary danger" @click="confirmDelete">
-            Удалить навсегда
+            {{ t('projectForm.remove') }}
           </button>
         </div>
         <p v-if="project.archived" class="card-note" style="text-align: center">
-          Проект в архиве — данные сохранены
+          {{ t('projectForm.archivedNote') }}
         </p>
       </template>
     </div>

@@ -14,6 +14,9 @@ const emit = defineEmits<{ replayOnboarding: [] }>()
 const nowMs = useTimerTick()
 const modal = ref<Modal>(null)
 
+const { t } = useI18n()
+const fmt = useFormat()
+
 const tasksStore = useTasksStore()
 const timer = useTimerStore()
 const settings = useSettingsStore()
@@ -44,8 +47,8 @@ function replayOnboarding(): void {
   <div class="screen scr">
     <div class="header">
       <div>
-        <div class="eyebrow">{{ greeting() }}</div>
-        <h1 class="h1">Дашборд</h1>
+        <div class="eyebrow">{{ t(`greeting.${greetingKey()}`) }}</div>
+        <h1 class="h1">{{ t('dashboard.title') }}</h1>
       </div>
       <div class="header-btns">
         <button class="icon-btn" @click="settings.setCurrency(nextCurrency(currency))">
@@ -62,21 +65,21 @@ function replayOnboarding(): void {
 
     <div class="hero">
       <div class="hero-inner">
-        <div class="hero-label">Заработано · к оплате</div>
-        <div class="hero-total num">{{ formatMoney(stats.earnedTotal, currency) }}</div>
+        <div class="hero-label">{{ t('dashboard.heroLabel') }}</div>
+        <div class="hero-total num">{{ fmt.money(stats.earnedTotal, currency) }}</div>
         <div class="hero-hours">
-          <b><UiIcon name="clock" :size="13" color="#43d6a0" /> {{ formatMinutes(stats.hoursTotal) }}</b>
-          <span>всего отработано</span>
+          <b><UiIcon name="clock" :size="13" color="#43d6a0" /> {{ fmt.minutes(stats.hoursTotal) }}</b>
+          <span>{{ t('dashboard.totalWorked') }}</span>
         </div>
         <div class="hero-divider" />
         <div class="hero-row">
           <div>
-            <div class="hero-sub-label">За текущий месяц</div>
-            <div class="hero-sub-value num">{{ formatMoney(stats.earnedMonth, currency) }}</div>
+            <div class="hero-sub-label">{{ t('dashboard.monthEarned') }}</div>
+            <div class="hero-sub-value num">{{ fmt.money(stats.earnedMonth, currency) }}</div>
           </div>
           <div style="text-align: right">
-            <div class="hero-sub-label">Часов за месяц</div>
-            <div class="hero-sub-value num">{{ formatMinutes(stats.hoursMonth) }}</div>
+            <div class="hero-sub-label">{{ t('dashboard.monthHours') }}</div>
+            <div class="hero-sub-value num">{{ fmt.minutes(stats.hoursMonth) }}</div>
           </div>
         </div>
       </div>
@@ -84,32 +87,32 @@ function replayOnboarding(): void {
 
     <div class="section-head">
       <span class="dot" />
-      <span class="section-title">Сегодня</span>
+      <span class="section-title">{{ t('dashboard.today') }}</span>
       <span class="section-note">00:00 – 23:59</span>
     </div>
     <div class="tiles">
       <div class="tile">
-        <div class="tile-value num">{{ formatMoney(stats.earnedToday, currency) }}</div>
-        <div class="tile-label">Заработано</div>
+        <div class="tile-value num">{{ fmt.money(stats.earnedToday, currency) }}</div>
+        <div class="tile-label">{{ t('dashboard.earnedToday') }}</div>
       </div>
       <div class="tile">
         <div class="tile-value num">{{ stats.createdToday }}</div>
-        <div class="tile-label">Создано задач</div>
+        <div class="tile-label">{{ t('dashboard.createdToday') }}</div>
       </div>
       <div class="tile">
-        <div class="tile-value num">{{ formatMinutes(stats.timeToday) }}</div>
-        <div class="tile-label">Отработано</div>
+        <div class="tile-value num">{{ fmt.minutes(stats.timeToday) }}</div>
+        <div class="tile-label">{{ t('dashboard.workedToday') }}</div>
       </div>
     </div>
 
     <div class="tasks-head">
       <div class="tasks-title-row">
-        <span class="tasks-title">Задачи</span>
+        <span class="tasks-title">{{ t('dashboard.tasks') }}</span>
         <span class="tasks-count">{{ stats.listCount }}</span>
       </div>
       <div class="header-btns">
         <button class="done-btn" @click="modal = { type: 'done' }">
-          <UiIcon name="check" :size="11" /> Готово {{ stats.doneCount }}
+          <UiIcon name="check" :size="11" /> {{ t('dashboard.done', { count: stats.doneCount }) }}
         </button>
         <button class="add-btn" @click="modal = { type: 'add' }">+</button>
       </div>
@@ -118,23 +121,23 @@ function replayOnboarding(): void {
     <div v-for="group in stats.groups" :key="group.key" class="group">
       <div class="group-head">
         <span class="group-dot" :style="{ background: group.color }" />
-        <span class="group-label">{{ group.label }}</span>
+        <span class="group-label">{{ t(`status.${group.key}`) }}</span>
         <span class="group-count">{{ group.tasks.length }}</span>
       </div>
       <div class="group-list">
         <div v-for="task in group.tasks" :key="task.id" class="task">
-          <span class="task-bar" :style="{ background: STATUS[task.status].color }" />
+          <span class="task-bar" :style="{ background: STATUS_COLOR[task.status] }" />
           <div @click="modal = { type: 'edit', taskId: task.id }">
             <div class="task-top">
               <div class="task-title">{{ task.title }}</div>
-              <div class="task-amount num">{{ formatMoney(taskAmount(task, liveMinutes(task)), currency) }}</div>
+              <div class="task-amount num">{{ fmt.money(taskAmount(task, liveMinutes(task)), currency) }}</div>
             </div>
             <div class="task-meta">
               <span>{{ projects.nameOf(task.projectId) }}</span>
               <span class="sep" />
-              <span>{{ task.rateType === 'hourly' ? 'Почасовая' : 'Фикс' }}</span>
+              <span>{{ task.rateType === 'hourly' ? t('rateType.hourly') : t('rateType.fixedShort') }}</span>
               <span class="sep" />
-              <span class="with-icon"><UiIcon name="clock" :size="11" /> {{ formatMinutes(liveMinutes(task)) }}</span>
+              <span class="with-icon"><UiIcon name="clock" :size="11" /> {{ fmt.minutes(liveMinutes(task)) }}</span>
             </div>
           </div>
           <div class="task-controls">
@@ -143,7 +146,7 @@ function replayOnboarding(): void {
             </button>
             <button :class="isRunning(task) ? 'timer-btn running' : 'timer-btn'" @click="toggleTimer(task)">
               <UiIcon :name="isRunning(task) ? 'pause' : 'play'" :size="11" />
-              {{ isRunning(task) ? 'Остановить' : 'Запустить таймер' }}
+              {{ isRunning(task) ? t('dashboard.stopTimer') : t('dashboard.startTimer') }}
             </button>
             <button class="step-btn" @click="tasksStore.stepStatusOf(task.id, 1)">
               <UiIcon name="chevron-right" :size="14" />
@@ -154,11 +157,9 @@ function replayOnboarding(): void {
     </div>
 
     <div v-if="stats.listCount === 0" class="empty">
-      <div class="empty-title">{{ hasProjects ? 'Пока нет задач' : 'Начните с проекта' }}</div>
+      <div class="empty-title">{{ hasProjects ? t('dashboard.emptyTasks') : t('dashboard.emptyProjects') }}</div>
       <p class="empty-text">
-        {{ hasProjects
-          ? 'Нажмите «+» рядом со списком, чтобы добавить первую задачу.'
-          : 'Создайте первый проект во вкладке «Проекты», а затем добавьте задачу.' }}
+        {{ hasProjects ? t('dashboard.emptyTasksHint') : t('dashboard.emptyProjectsHint') }}
       </p>
     </div>
 

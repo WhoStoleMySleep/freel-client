@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { textContext } from '../../helpers/textContext'
 import type { ReportRow } from '~/types'
 
 const rows: ReportRow[] = [
@@ -10,40 +11,45 @@ const rows: ReportRow[] = [
 describe('reportToText', () => {
   test('по умолчанию ставит после задачи ссылку', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    expect(reportToText(rows)).toContain('1) Чекаут - https://tracker/1')
+    expect(reportToText(rows, 'link', textContext())).toContain('1) Чекаут - https://tracker/1')
   })
 
   test('группирует по проектам в порядке появления', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    const text = reportToText(rows)
+    const text = reportToText(rows, 'link', textContext())
     expect(text.indexOf('Acme')).toBeLessThan(text.indexOf('Fin'))
     expect(text).toContain('1) Отчёты - https://tracker/2')
   })
 
   test('строку без ссылки оставляет голой', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    expect(reportToText(rows)).toContain('2) Корзина\n')
+    expect(reportToText(rows, 'link', textContext())).toContain('2) Корзина\n')
   })
 
   test('в режиме часов подставляет время и добавляет итог', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    const text = reportToText(rows, 'hours')
+    const text = reportToText(rows, 'hours', textContext())
     expect(text).toContain('1) Чекаут - 1,5 ч')
     expect(text).toContain('Итог: 3,5 ч')
   })
 
   test('в режиме часов задача без времени идёт без хвоста', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    expect(reportToText(rows, 'hours')).toContain('2) Корзина\n')
+    expect(reportToText(rows, 'hours', textContext())).toContain('2) Корзина\n')
   })
 
   test('всегда считает количество задач', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    expect(reportToText(rows)).toContain('Всего задач: 3')
+    expect(reportToText(rows, 'link', textContext())).toContain('Всего задач: 3')
   })
 
   test('пустой список не ломает вывод', async () => {
     const { reportToText } = await import('~/utils/reportText')
-    expect(reportToText([])).toContain('Всего задач: 0')
+    expect(reportToText([], 'link', textContext())).toContain('Всего задач: 0')
+  })
+
+  test('в английской локали итоги берутся из английского словаря', async () => {
+    const { reportToText } = await import('~/utils/reportText')
+    expect(reportToText(rows, 'hours', textContext('en'))).toContain('Tasks in total: 3')
   })
 })

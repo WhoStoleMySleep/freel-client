@@ -27,7 +27,7 @@ function runningMinutes(timer: ActiveTimer | null, nowMs: number): number {
  */
 export function boardGroups(tasks: Task[]): DashboardGroup[] {
   return DASH_ORDER
-    .map(key => ({ key, label: STATUS[key].label, color: STATUS[key].color, tasks: tasks.filter(t => t.status === key) }))
+    .map(key => ({ key, color: STATUS_COLOR[key], tasks: tasks.filter(t => t.status === key) }))
     .filter(group => group.tasks.length > 0)
 }
 

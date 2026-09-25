@@ -4,12 +4,11 @@ import type { RateType, TaskStatus } from '~/types'
 const props = defineProps<{ open: boolean, taskId: string | null }>()
 const emit = defineEmits<{ close: [] }>()
 
-const RATE_OPTIONS: { key: RateType, label: string }[] = [
-  { key: 'hourly', label: 'Почасовая' },
-  { key: 'fixed', label: 'Фиксированная' },
-]
-const STATUS_OPTIONS = (Object.keys(STATUS) as TaskStatus[]).filter(key => key !== 'done')
+const RATE_OPTIONS: RateType[] = ['hourly', 'fixed']
+const STATUS_OPTIONS = (Object.keys(STATUS_COLOR) as TaskStatus[]).filter(key => key !== 'done')
 
+const { t } = useI18n()
+const fmt = useFormat()
 const tasks = useTasksStore()
 const projects = useProjectsStore()
 const { currency, defaultRate, compactTaskForm } = storeToRefs(useSettingsStore())
@@ -36,9 +35,10 @@ const showAddTime = ref(false)
 const addHours = ref('')
 const addMinutes = ref('')
 
-const rateLabel = computed(() =>
-  rateType.value === 'hourly' ? `Ставка в час, ${currency.value}` : `Стоимость, ${currency.value}`
-)
+const rateLabel = computed(() => t(
+  rateType.value === 'hourly' ? 'taskForm.rateLabelHourly' : 'taskForm.rateLabelFixed',
+  { currency: currency.value },
+))
 
 function fill(): void {
   showAddTime.value = false
@@ -76,7 +76,7 @@ async function save(): Promise<void> {
   }
   const current = task.value
   if (!current && !projectId.value) {
-    window.alert('Сначала создайте проект на вкладке «Проекты».')
+    window.alert(t('taskForm.needProject'))
     return
   }
   if (current) await tasks.edit(current.id, patch)
@@ -98,7 +98,7 @@ async function commitAddTime(): Promise<void> {
 async function confirmDelete(): Promise<void> {
   const current = task.value
   if (!current) return
-  if (!window.confirm('Удалить задачу? Задача и всё учтённое по ней время будут удалены безвозвратно.')) return
+  if (!window.confirm(t('taskForm.confirmDelete'))) return
   await tasks.remove(current.id)
   emit('close')
 }
@@ -106,14 +106,19 @@ async function confirmDelete(): Promise<void> {
 
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
-    <UiModalHead :title="task ? 'Редактирование' : 'Новая задача'" @close="emit('close')" />
+    <UiModalHead :title="task ? t('taskForm.edit') : t('taskForm.create')" @close="emit('close')" />
     <div class="stack">
-      <UiField v-model="title" label="Название" placeholder="Название задачи" />
-      <UiField v-model="description" label="Описание" placeholder="Что нужно сделать" multiline />
-      <UiField v-model="link" label="Ссылка" placeholder="https://" accent />
+      <UiField v-model="title" :label="t('taskForm.name')" :placeholder="t('taskForm.namePlaceholder')" />
+      <UiField
+        v-model="description"
+        :label="t('taskForm.description')"
+        :placeholder="t('taskForm.descriptionPlaceholder')"
+        multiline
+      />
+      <UiField v-model="link" :label="t('taskForm.link')" placeholder="https://" accent />
 
       <div>
-        <span class="field-label">Проект</span>
+        <span class="field-label">{{ t('taskForm.project') }}</span>
         <div class="chips">
           <UiChip
             v-for="project in projectOptions"
@@ -127,15 +132,15 @@ async function confirmDelete(): Promise<void> {
 
       <template v-if="!compact">
         <div>
-          <span class="field-label">Тип ставки</span>
+          <span class="field-label">{{ t('taskForm.rateTypeLabel') }}</span>
           <div class="chips">
             <UiChip
               v-for="option in RATE_OPTIONS"
-              :key="option.key"
-              :label="option.label"
-              :active="rateType === option.key"
+              :key="option"
+              :label="t(`rateType.${option}`)"
+              :active="rateType === option"
               grow
-              @click="rateType = option.key"
+              @click="rateType = option"
             />
           </div>
         </div>
@@ -145,34 +150,34 @@ async function confirmDelete(): Promise<void> {
         <div class="time-box">
           <div class="time-top">
             <div>
-              <div class="card-label">Отработано времени</div>
-              <div class="time-value num">{{ formatMinutes(task?.minutes ?? 0) }}</div>
+              <div class="card-label">{{ t('taskForm.worked') }}</div>
+              <div class="time-value num">{{ fmt.minutes(task?.minutes ?? 0) }}</div>
             </div>
             <button class="plus-btn" @click="showAddTime = !showAddTime">+</button>
           </div>
           <div v-if="showAddTime" class="time-add">
             <label>
-              <span class="mini-label">Часы</span>
+              <span class="mini-label">{{ t('taskForm.hours') }}</span>
               <UiField v-model="addHours" placeholder="0" numeric />
             </label>
             <label>
-              <span class="mini-label">Минуты</span>
+              <span class="mini-label">{{ t('taskForm.minutes') }}</span>
               <UiField v-model="addMinutes" placeholder="0" numeric />
             </label>
             <button class="btn-primary" style="margin: 0; width: auto; padding: 13px 14px" @click="commitAddTime">
-              Добавить
+              {{ t('taskForm.add') }}
             </button>
           </div>
         </div>
 
         <div>
-          <span class="field-label">Статус</span>
+          <span class="field-label">{{ t('taskForm.statusLabel') }}</span>
           <div class="chips">
             <UiChip
               v-for="key in STATUS_OPTIONS"
               :key="key"
-              :label="STATUS[key].label"
-              :dot-color="STATUS[key].color"
+              :label="t(`status.${key}`)"
+              :dot-color="STATUS_COLOR[key]"
               :active="status === key"
               small
               @click="status = key"
@@ -181,14 +186,16 @@ async function confirmDelete(): Promise<void> {
         </div>
       </template>
 
-      <div v-if="task" class="created-at">Дата создания: {{ shortDate(task.createdAt.slice(0, 10)) }}</div>
+      <div v-if="task" class="created-at">
+        {{ t('taskForm.createdAt', { date: fmt.shortDate(task.createdAt.slice(0, 10)) }) }}
+      </div>
 
       <button class="btn-primary" @click="save">
-        {{ task ? 'Сохранить' : 'Создать задачу' }}
+        {{ task ? t('common.save') : t('taskForm.submit') }}
       </button>
 
       <button v-if="task" class="btn-secondary danger" @click="confirmDelete">
-        Удалить задачу
+        {{ t('taskForm.remove') }}
       </button>
     </div>
   </UiBottomSheet>

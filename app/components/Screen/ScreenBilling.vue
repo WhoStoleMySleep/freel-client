@@ -7,6 +7,9 @@ const MAX_MONTHS_BACK = 36
 /** How far a finger has to travel before it counts as a month swipe. */
 const SWIPE_PX = 40
 
+const { t } = useI18n()
+const fmt = useFormat()
+
 const { items: invoices } = storeToRefs(useInvoicesStore())
 const { items: tasks } = storeToRefs(useTasksStore())
 const { currency } = storeToRefs(useSettingsStore())
@@ -46,27 +49,25 @@ const invoiceTotal = (invoice: Invoice) => (invoice.status === 'paid' && invoice
   <div class="screen scr">
     <div class="header">
       <div>
-        <div class="eyebrow">Финансы</div>
-        <h1 class="h1">Биллинг и счета</h1>
+        <div class="eyebrow">{{ t('billing.eyebrow') }}</div>
+        <h1 class="h1">{{ t('billing.title') }}</h1>
       </div>
     </div>
 
     <button class="gen-btn" :disabled="!canGenerate" @click="modal = { type: 'generate' }">
       <UiIcon name="invoice" :size="17" :stroke-width="2.2" />
-      Сгенерировать счёт
+      {{ t('billing.generate') }}
     </button>
     <p class="gen-hint">
-      {{ canGenerate ? 'Есть задачи «Ожидает оплаты»' : 'Нет задач со статусом «Ожидает оплаты»' }}
+      {{ canGenerate ? t('billing.canGenerate') : t('billing.cannotGenerate') }}
     </p>
 
     <button class="gen-btn ghost" @click="modal = { type: 'report' }">
       <UiIcon name="link" :size="17" :stroke-width="2.2" />
-      Отчёт по задачам
+      {{ t('billing.report') }}
     </button>
     <p class="gen-hint">
-      {{ reviewCount
-        ? `На проверке: ${reviewCount} — ссылки или часы на выбор`
-        : 'Нет задач на проверке, но статусы можно выбрать в отчёте' }}
+      {{ reviewCount ? t('billing.reviewCount', { count: reviewCount }) : t('billing.noReview') }}
     </p>
 
     <div
@@ -79,8 +80,8 @@ const invoiceTotal = (invoice: Invoice) => (invoice.status === 'paid' && invoice
           <UiIcon name="chevron-left" :size="13" />
         </button>
         <div style="text-align: center">
-          <div class="chart-month">{{ monthLabel(shown.year, shown.month) }}</div>
-          <div class="chart-total num">{{ formatMoney(chart.calculatedTotal, currency) }}</div>
+          <div class="chart-month">{{ fmt.monthLabel(shown.year, shown.month) }}</div>
+          <div class="chart-total num">{{ fmt.money(chart.calculatedTotal, currency) }}</div>
         </div>
         <button class="nav-btn" :disabled="!canNext" @click="shiftMonth(1)">
           <UiIcon name="chevron-right" :size="13" />
@@ -120,14 +121,14 @@ const invoiceTotal = (invoice: Invoice) => (invoice.status === 'paid' && invoice
       </svg>
 
       <div class="legend">
-        <span class="legend-item"><span class="legend-line" />Факт по счетам</span>
-        <span class="legend-item"><span class="legend-dash" />Расчётный доход</span>
+        <span class="legend-item"><span class="legend-line" />{{ t('billing.legendFact') }}</span>
+        <span class="legend-item"><span class="legend-dash" />{{ t('billing.legendPlan') }}</span>
       </div>
     </div>
 
     <div class="tasks-head">
       <div class="tasks-title-row">
-        <span class="tasks-title">История счетов</span>
+        <span class="tasks-title">{{ t('billing.history') }}</span>
         <span class="tasks-count">{{ invoices.length }}</span>
       </div>
     </div>
@@ -140,28 +141,30 @@ const invoiceTotal = (invoice: Invoice) => (invoice.status === 'paid' && invoice
         @click="modal = { type: 'detail', invoiceId: invoice.id }"
       >
         <span style="flex: 1; min-width: 0; padding-right: 8px">
-          <span class="invoice-number" style="display: block">Счёт {{ invoice.number }}</span>
+          <span class="invoice-number" style="display: block">{{ t('billing.invoiceNumber', { number: invoice.number }) }}</span>
           <span class="invoice-sub" style="display: block">
-            {{ invoice.projectName }} · {{ invoice.items.length }} задач · {{ shortDate(invoice.dayKey) }}
+            {{ invoice.projectName }}
+            · {{ t('billing.taskCount', { count: invoice.items.length }, invoice.items.length) }}
+            · {{ fmt.shortDate(invoice.dayKey) }}
           </span>
         </span>
         <span style="text-align: right">
           <span class="invoice-total num" style="display: block">
-            {{ formatMoney(invoiceTotal(invoice), currency) }}
+            {{ fmt.money(invoiceTotal(invoice), currency) }}
           </span>
           <span
             class="status-badge"
             :style="{
-              background: `${INVOICE_STATUS[invoice.status].color}22`,
-              color: INVOICE_STATUS[invoice.status].color,
+              background: `${INVOICE_STATUS_COLOR[invoice.status]}22`,
+              color: INVOICE_STATUS_COLOR[invoice.status],
             }"
           >
-            {{ INVOICE_STATUS[invoice.status].label }}
+            {{ t(`invoiceStatus.${invoice.status}`) }}
           </span>
         </span>
       </button>
       <p v-if="invoices.length === 0" class="modal-hint" style="text-align: center; padding: 30px 0">
-        Пока нет сгенерированных счетов
+        {{ t('billing.empty') }}
       </p>
     </div>
 

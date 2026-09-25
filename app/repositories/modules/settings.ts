@@ -1,11 +1,12 @@
 import { getDb } from '~/repositories/db'
-import type { ActiveTimer, Currency, Settings, ThemeMode } from '~/types'
+import type { ActiveTimer, Currency, LanguageMode, Settings, ThemeMode } from '~/types'
 
 interface SettingsRow {
   updated_at: string
   device_id: string
   device_code: string
   theme_mode: ThemeMode
+  language: LanguageMode
   currency: Currency
   default_rate: number
   has_onboarded: number
@@ -20,6 +21,7 @@ interface SettingsRow {
 function mapSettings(row: SettingsRow): Settings {
   return {
     themeMode: row.theme_mode,
+    language: row.language,
     currency: row.currency,
     defaultRate: row.default_rate,
     hasOnboarded: !!row.has_onboarded,
@@ -92,6 +94,7 @@ export async function updateSettings(patch: Partial<Settings>): Promise<void> {
   }
 
   if (patch.themeMode !== undefined) push('theme_mode', patch.themeMode)
+  if (patch.language !== undefined) push('language', patch.language)
   if (patch.currency !== undefined) push('currency', patch.currency)
   if (patch.defaultRate !== undefined) push('default_rate', patch.defaultRate)
   if (patch.hasOnboarded !== undefined) push('has_onboarded', patch.hasOnboarded ? 1 : 0)

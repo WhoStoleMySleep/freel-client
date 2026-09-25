@@ -1,14 +1,14 @@
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
-import type { BackupFile } from '~/types'
+import type { BackupError, BackupFile } from '~/types'
 
 export type SaveResult = { status: 'saved', path: string } | { status: 'cancelled' }
 
 /** Asks where to put the backup and writes it there. */
-export async function saveBackup(backup: BackupFile): Promise<SaveResult> {
+export async function saveBackup(backup: BackupFile, filterName: string): Promise<SaveResult> {
   const path = await save({
     defaultPath: backupFileName(),
-    filters: [{ name: 'Резервная копия freel', extensions: ['json'] }],
+    filters: [{ name: filterName, extensions: ['json'] }],
   })
   if (!path) return { status: 'cancelled' }
 
@@ -18,15 +18,15 @@ export async function saveBackup(backup: BackupFile): Promise<SaveResult> {
 
 export type PickResult =
   | { status: 'cancelled' }
-  | { status: 'error', message: string }
+  | { status: 'error', error: BackupError, detail?: string }
   | { status: 'ok', backup: BackupFile }
 
 /** Lets the user pick a backup file and validates its contents. */
-export async function pickBackup(): Promise<PickResult> {
+export async function pickBackup(filterName: string): Promise<PickResult> {
   const picked = await open({
     multiple: false,
     directory: false,
-    filters: [{ name: 'Резервная копия freel', extensions: ['json'] }],
+    filters: [{ name: filterName, extensions: ['json'] }],
   })
   if (!picked) return { status: 'cancelled' }
 
@@ -34,10 +34,10 @@ export async function pickBackup(): Promise<PickResult> {
   try {
     const raw = await readTextFile(path)
     const parsed = parseBackup(raw)
-    if (!parsed.ok) return { status: 'error', message: parsed.error }
+    if (!parsed.ok) return { status: 'error', error: parsed.error }
     return { status: 'ok', backup: parsed.data }
   }
   catch (e) {
-    return { status: 'error', message: 'Не удалось прочитать файл: ' + String(e) }
+    return { status: 'error', error: 'unreadable', detail: String(e) }
   }
 }

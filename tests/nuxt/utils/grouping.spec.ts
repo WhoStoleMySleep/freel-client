@@ -9,21 +9,21 @@ const rows = [
 describe('groupByProjectName', () => {
   test('пустой список не даёт групп', async () => {
     const { groupByProjectName } = await import('~/utils/grouping')
-    expect(groupByProjectName([]).size).toBe(0)
+    expect(groupByProjectName([], 'Без проекта').size).toBe(0)
   })
 
   test('проекты идут в порядке первого появления', async () => {
     const { groupByProjectName } = await import('~/utils/grouping')
-    expect([...groupByProjectName(rows).keys()]).toEqual(['Acme', 'Fin'])
+    expect([...groupByProjectName(rows, 'Без проекта').keys()]).toEqual(['Acme', 'Fin'])
   })
 
   test('строки одного проекта собираются вместе', async () => {
     const { groupByProjectName } = await import('~/utils/grouping')
-    expect(groupByProjectName(rows).get('Acme')).toHaveLength(2)
+    expect(groupByProjectName(rows, 'Без проекта').get('Acme')).toHaveLength(2)
   })
 
-  test('пустое имя проекта заменяется общей группой', async () => {
-    const { groupByProjectName, UNNAMED_PROJECT } = await import('~/utils/grouping')
-    expect([...groupByProjectName([{ projectName: '' }]).keys()]).toEqual([UNNAMED_PROJECT])
+  test('пустое имя проекта заменяется переданной подписью', async () => {
+    const { groupByProjectName } = await import('~/utils/grouping')
+    expect([...groupByProjectName([{ projectName: '' }], 'Без проекта').keys()]).toEqual(['Без проекта'])
   })
 })

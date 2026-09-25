@@ -9,6 +9,7 @@ const TINTS: [string, string][] = [
   ['rgba(185,140,255,0.16)', '#b98cff'],
 ]
 
+const { t } = useI18n()
 const modal = ref<Modal>(null)
 const { items: projects } = storeToRefs(useProjectsStore())
 const { items: tasks } = storeToRefs(useTasksStore())
@@ -29,8 +30,8 @@ const tintOf = (index: number) => TINTS[index % TINTS.length]!
   <div class="screen scr">
     <div class="header">
       <div>
-        <div class="eyebrow">Управление</div>
-        <h1 class="h1">Проекты</h1>
+        <div class="eyebrow">{{ t('projects.eyebrow') }}</div>
+        <h1 class="h1">{{ t('projects.title') }}</h1>
       </div>
     </div>
 
@@ -48,10 +49,11 @@ const tintOf = (index: number) => TINTS[index % TINTS.length]!
         <span class="project-body">
           <span class="project-name-row">
             <span class="project-name">{{ project.name }}</span>
-            <span v-if="project.archived" class="archive-badge">АРХИВ</span>
+            <span v-if="project.archived" class="archive-badge">{{ t('projects.archived') }}</span>
           </span>
           <span class="project-sub">
-            {{ (project.description || 'Без описания') + ' · ' + (openCounts.get(project.id) ?? 0) + ' активн.' }}
+            {{ (project.description || t('projects.noDescription'))
+              + ' · ' + t('projects.activeCount', { count: openCounts.get(project.id) ?? 0 }) }}
           </span>
         </span>
         <UiIcon name="chevron-right" :size="16" color="var(--mute)" :stroke-width="2" />
@@ -59,8 +61,8 @@ const tintOf = (index: number) => TINTS[index % TINTS.length]!
     </div>
 
     <div v-if="projects.length === 0" class="empty">
-      <div class="empty-title">Пока нет проектов</div>
-      <p class="empty-text">Нажмите «+», чтобы создать первый проект.</p>
+      <div class="empty-title">{{ t('projects.empty') }}</div>
+      <p class="empty-text">{{ t('projects.emptyHint') }}</p>
     </div>
 
     <button class="fab" @click="modal = { type: 'add' }">+</button>

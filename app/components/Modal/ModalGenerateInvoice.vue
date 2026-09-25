@@ -2,6 +2,8 @@
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
+const { t } = useI18n()
+const fmt = useFormat()
 const tasks = useTasksStore()
 const projects = useProjectsStore()
 const invoices = useInvoicesStore()
@@ -31,11 +33,11 @@ async function create(): Promise<void> {
 
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
-    <UiModalHead title="Новый счёт" @close="emit('close')" />
-    <p class="modal-hint">Задачи со статусом «Ожидает оплаты», сгруппированы по проектам. Пустой фильтр = все.</p>
+    <UiModalHead :title="t('invoiceGen.title')" @close="emit('close')" />
+    <p class="modal-hint">{{ t('invoiceGen.hint') }}</p>
 
     <div class="chips" style="gap: 5px; margin-bottom: 12px">
-      <UiChip label="Все" :active="filterProjectId === ''" small @click="filterProjectId = ''" />
+      <UiChip :label="t('common.all')" :active="filterProjectId === ''" small @click="filterProjectId = ''" />
       <UiChip
         v-for="project in projects.active"
         :key="project.id"
@@ -49,26 +51,26 @@ async function create(): Promise<void> {
     <UiTaskPicker
       :groups="groups"
       :master="master"
-      empty-text="Нет задач «Ожидает оплаты» по этому фильтру"
+      :empty-text="t('invoiceGen.empty')"
       @toggle="setMany"
     >
       <template #meta="{ task }">
         <span class="gen-task-meta">
-          <UiIcon name="clock" :size="10" /> {{ formatMinutes(task.minutes) }}
+          <UiIcon name="clock" :size="10" /> {{ fmt.minutes(task.minutes) }}
         </span>
       </template>
       <template #trailing="{ task }">
-        <span class="inv-item-amount num">{{ formatMoney(taskAmount(task, task.minutes), currency) }}</span>
+        <span class="inv-item-amount num">{{ fmt.money(taskAmount(task, task.minutes), currency) }}</span>
       </template>
     </UiTaskPicker>
 
     <div class="sel-summary">
-      <span class="sel-count">Выбрано: {{ chosen.length }}</span>
-      <span class="sel-total num">{{ formatMoney(total, currency) }}</span>
+      <span class="sel-count">{{ t('common.selected', { count: chosen.length }) }}</span>
+      <span class="sel-total num">{{ fmt.money(total, currency) }}</span>
     </div>
 
     <button class="btn-primary" style="margin-top: 0" :disabled="!chosen.length" @click="create">
-      Создать счёт
+      {{ t('invoiceGen.submit') }}
     </button>
   </UiBottomSheet>
 </template>

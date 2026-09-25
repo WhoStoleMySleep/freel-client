@@ -16,6 +16,24 @@ export type Currency = 'RUB' | 'USD' | 'EUR' | 'GBP' | 'CNY'
 
 export type ThemeMode = 'system' | 'dark' | 'light'
 
+/** Locales the interface ships in; 'system' follows the OS. */
+export type LanguageMode = 'system' | 'ru' | 'en'
+
+export type Locale = 'ru' | 'en'
+
+/**
+ * What a pure text builder needs to speak the user's language: vue-i18n's `t`
+ * narrowed to the shape these helpers call it with, plus the locale the
+ * formatters take. Passing it in keeps `app/utils` free of app state.
+ */
+/** Why a backup file was rejected; the interface turns it into a sentence. */
+export type BackupError = 'notJson' | 'corrupt' | 'foreign' | 'tooNew' | 'incomplete' | 'unreadable'
+
+export interface TextContext {
+  locale: Locale
+  t: (key: string, params?: Record<string, unknown>) => string
+}
+
 export interface Project {
   id: string
   name: string
@@ -79,6 +97,7 @@ export interface Invoice {
 
 export interface Settings {
   themeMode: ThemeMode
+  language: LanguageMode
   currency: Currency
   defaultRate: number
   hasOnboarded: boolean
@@ -148,7 +167,6 @@ export interface TaskMaster {
 
 export interface DashboardGroup {
   key: TaskStatus
-  label: string
   color: string
   tasks: Task[]
 }

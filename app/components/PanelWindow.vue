@@ -12,7 +12,11 @@ import type { Task } from '~/types'
  */
 const nowMs = useTimerTick()
 useResolvedTheme()
+useLocale()
 useDbSync()
+
+const { t } = useI18n()
+const fmt = useFormat()
 
 const app = useAppStore()
 const tasksStore = useTasksStore()
@@ -61,13 +65,13 @@ async function submit(): Promise<void> {
 
 <template>
   <div v-if="!ready" class="panel">
-    <div class="panel-empty">Загрузка…</div>
+    <div class="panel-empty">{{ t('panel.loading') }}</div>
   </div>
 
   <div v-else class="panel">
     <div class="panel-head">
       <span class="panel-brand">freel</span>
-      <button class="panel-close" aria-label="Скрыть" @click="getCurrentWindow().hide()">✕</button>
+      <button class="panel-close" :aria-label="t('panel.hide')" @click="getCurrentWindow().hide()">✕</button>
     </div>
 
     <div v-if="activeTimer && running" class="panel-timer">
@@ -76,11 +80,11 @@ async function submit(): Promise<void> {
       <div class="panel-timer-btns">
         <button class="panel-btn" @click="activeTimer.paused ? timer.resume() : timer.pause()">
           <UiIcon :name="activeTimer.paused ? 'play' : 'pause'" />
-          {{ activeTimer.paused ? 'Продолжить' : 'Пауза' }}
+          {{ activeTimer.paused ? t('panel.resume') : t('panel.pause') }}
         </button>
         <button class="panel-btn danger" @click="timer.stop()">
           <UiIcon name="stop" />
-          Стоп
+          {{ t('panel.stop') }}
         </button>
       </div>
     </div>
@@ -89,7 +93,7 @@ async function submit(): Promise<void> {
       <input
         v-model="title"
         class="panel-input"
-        placeholder="Новая задача"
+        :placeholder="t('panel.newTask')"
         @focus="lockPanel(true)"
         @blur="lockPanel(false)"
         @keydown.enter="submit"
@@ -103,11 +107,11 @@ async function submit(): Promise<void> {
     </select>
 
     <div class="panel-list scr">
-      <div v-if="open.length === 0" class="panel-empty">Активных задач нет</div>
+      <div v-if="open.length === 0" class="panel-empty">{{ t('panel.empty') }}</div>
       <div v-for="group in groups" :key="group.key" class="panel-group">
         <div class="panel-group-head">
           <span class="panel-dot" :style="{ background: group.color }" />
-          <span class="panel-group-label">{{ group.label }}</span>
+          <span class="panel-group-label">{{ t(`status.${group.key}`) }}</span>
           <span class="panel-group-count">{{ group.tasks.length }}</span>
         </div>
         <div
@@ -118,14 +122,14 @@ async function submit(): Promise<void> {
           <div class="panel-task-top">
             <div class="panel-task-title">{{ task.title }}</div>
             <div class="panel-task-amount num">
-              {{ formatMoney(taskAmount(task, liveMinutes(task)), currency) }}
+              {{ fmt.money(taskAmount(task, liveMinutes(task)), currency) }}
             </div>
           </div>
           <div class="panel-task-meta">
-            {{ projects.nameOf(task.projectId) }} · {{ formatMinutes(liveMinutes(task)) }}
+            {{ projects.nameOf(task.projectId) }} · {{ fmt.minutes(liveMinutes(task)) }}
           </div>
           <div class="panel-task-controls">
-            <button class="panel-step" aria-label="Предыдущий статус" @click="tasksStore.stepStatusOf(task.id, -1)">
+            <button class="panel-step" :aria-label="t('panel.prevStatus')" @click="tasksStore.stepStatusOf(task.id, -1)">
               <UiIcon name="chevron-left" />
             </button>
             <button
@@ -133,9 +137,9 @@ async function submit(): Promise<void> {
               @click="isRunning(task) ? timer.stop() : timer.start(task.id)"
             >
               <UiIcon :name="isRunning(task) ? 'stop' : 'play'" />
-              {{ isRunning(task) ? 'Остановить' : 'Запустить' }}
+              {{ isRunning(task) ? t('panel.stopTask') : t('panel.start') }}
             </button>
-            <button class="panel-step" aria-label="Следующий статус" @click="tasksStore.stepStatusOf(task.id, 1)">
+            <button class="panel-step" :aria-label="t('panel.nextStatus')" @click="tasksStore.stepStatusOf(task.id, 1)">
               <UiIcon name="chevron-right" />
             </button>
           </div>

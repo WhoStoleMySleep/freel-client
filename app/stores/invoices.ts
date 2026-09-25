@@ -38,7 +38,7 @@ export const useInvoicesStore = defineStore('invoices', () => {
     const lines = chosen.map(lineFor)
     const projectNames = new Set(lines.map(l => l.projectName))
     items.value = await source().createInvoice({
-      projectName: projectNames.size > 1 ? 'Разные проекты' : [...projectNames][0]!,
+      projectName: projectNames.size > 1 ? translate('invoice.mixedProjects') : [...projectNames][0]!,
       dayKey: todayKey(),
       items: lines,
     })
