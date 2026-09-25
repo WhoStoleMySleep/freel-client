@@ -129,11 +129,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # NDK качается заново каждый раз: восстановленный из кеша теряет права на
+      # запуск, и сборка падает на линковке с «command not found».
       - uses: nttld/setup-ndk@v1
         id: ndk
         with:
           ndk-version: r27
-          local-cache: true
+          local-cache: false
 
       - uses: dtolnay/rust-toolchain@stable
         with:
