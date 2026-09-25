@@ -126,7 +126,16 @@ CI (`.github/workflows/ci.yml`) repeats lint, typecheck, tests and the static bu
 
 Dependabot (`.github/dependabot.yml`) opens one grouped pull request a week for minor and patch bumps and separate ones for majors. `sqlx` is excluded — it has to keep resolving to the same version `tauri-plugin-sql` uses, otherwise the transactional commands lose the plugin's pool.
 
-Installers are built by `.github/workflows/release.yml`, not locally: Windows needs WebView2 and WiX, Linux needs webkit2gtk, and neither cross-compiles from a Mac. Pushing a `v*` tag builds a `.dmg` for both Apple architectures, `.deb` / `.rpm` / `.AppImage` on Ubuntu 22.04 (older glibc, so the packages still install on older systems) and `.msi` / `.exe` on Windows, and collects them into a draft release. Running the workflow by hand builds the same set and uploads it as workflow artifacts instead, which is the way to try an installer before tagging.
+Installers are built by `.github/workflows/release.yml`, not locally: Windows needs WebView2 and WiX, Linux needs webkit2gtk, and neither cross-compiles from a Mac. Pushing a `v*` tag collects them into a draft release; running the workflow by hand builds the same four and uploads them as workflow artifacts instead, which is the way to try an installer before tagging.
+
+| Runner | Installer |
+|---|---|
+| macOS, `aarch64` and `x86_64` | `.dmg` |
+| Ubuntu 22.04 | `.deb` |
+| Windows | `.exe` (NSIS) |
+| Ubuntu, Android build | `.apk` |
+
+One format per system, chosen with `--bundles`: left alone, Tauri emits every format it knows, and the extra ones cost more than they give. `.AppImage` carries its own copy of webkit2gtk and weighs ten times the `.deb` that installs the same app; `.msi` duplicates the `.exe`; `.rpm` duplicates the `.deb`. Ubuntu 22.04 rather than the newest one because the `.deb` links against the build machine's glibc, and a newer one stops installing on older systems. Adding a format back is one word in the matrix.
 
 Nothing is code-signed. macOS quarantines an unsigned app on download — `xattr -dr com.apple.quarantine "/Applications/freel (tauri).app"` is what clears it — and Windows shows a SmartScreen warning. Signing needs a paid certificate on both platforms.
 

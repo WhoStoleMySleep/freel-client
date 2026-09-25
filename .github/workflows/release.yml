@@ -18,25 +18,33 @@ jobs:
           # Tauri собрать умеет, но тогда и зависимости нужны под обе арки.
           - os: macos-latest
             target: aarch64-apple-darwin
+            label: macos-arm64
+            bundles: dmg
           - os: macos-latest
             target: x86_64-apple-darwin
-          # Не latest: deb и AppImage линкуются с glibc сборочной машины, а на
-          # более новой они перестанут ставиться на системы постарше.
+            label: macos-x64
+            bundles: dmg
+          # Не latest: deb линкуется с glibc сборочной машины, а на более новой
+          # он перестанет ставиться на системы постарше.
           - os: ubuntu-22.04
             target: ''
+            label: linux-x64
+            bundles: deb
           - os: windows-latest
             target: ''
+            label: windows-x64
+            bundles: nsis
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -58,6 +66,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # По умолчанию Tauri делает все форматы разом: под Linux к deb добавился
+      # бы AppImage, который тащит в себе webkit2gtk и весит вдесятеро больше,
+      # под Windows — ещё и msi. Один формат на систему, остальные не нужны.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,19 +77,30 @@ jobs:
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
           releaseName: freel ${{ github.ref_name }}
           releaseDraft: true
-          args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+          args: --bundles ${{ matrix.bundles }} ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+
+      # upload-artifact сохраняет путь от корня репозитория, поэтому установщик
+      # переезжает в отдельную папку: иначе внутри архива он лежит в самом конце
+      # цепочки src-tauri/target/…/bundle/. Путь задан до каталога формата —
+      # рядом Tauri оставляет и распакованный пакет, и временный образ, из
+      # которого собирается dmg, а в архиве нужен ровно один файл.
+      - name: Collect the installer
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          mkdir dist
+          find src-tauri/target -type f \
+            \( -path '*/release/bundle/dmg/*.dmg' \
+            -o -path '*/release/bundle/deb/*.deb' \
+            -o -path '*/release/bundle/nsis/*.exe' \) \
+            -exec mv {} dist/ \;
+          ls -la dist
 
       - if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: bundle-${{ matrix.os }}-${{ matrix.target || 'native' }}
-          path: |
-            src-tauri/target/**/release/bundle/**/*.dmg
-            src-tauri/target/**/release/bundle/**/*.deb
-            src-tauri/target/**/release/bundle/**/*.rpm
-            src-tauri/target/**/release/bundle/**/*.AppImage
-            src-tauri/target/**/release/bundle/**/*.msi
-            src-tauri/target/**/release/bundle/**/*.exe
+          name: freel-${{ matrix.label }}
+          path: dist/*
           if-no-files-found: error
 
   android:
@@ -89,18 +111,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
@@ -157,8 +179,8 @@ jobs:
         run: gh release upload "${GITHUB_REF_NAME}" "${{ steps.apk.outputs.path }}" --clobber
 
       - if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: bundle-android
+          name: freel-android
           path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
