@@ -1,6 +1,6 @@
 [package]
 name = "freel-mobile-tauri"
-version = "0.2.0"
+version = "0.3.0"
 description = "Учёт времени и счетов для фриланса: десктоп и Android"
 authors = ["whostolemysleep"]
 edition = "2021"
