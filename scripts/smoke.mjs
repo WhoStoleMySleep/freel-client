@@ -27,7 +27,7 @@ function fail(message) {
 }
 
 if (!existsSync(ROOT)) {
-  fail(`${ROOT} is missing — run \`npm run build\` first`)
+  fail(`${ROOT} is missing — run \`pnpm build\` first`)
   process.exit(1)
 }
 

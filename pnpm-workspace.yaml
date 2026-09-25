@@ -1,0 +1,6 @@
+# pnpm 11 не запускает установочные скрипты зависимостей, пока их не разрешат
+# поимённо: esbuild и unrs-resolver так распаковывают свои нативные бинарники,
+# без которых не работают ни Vite, ни ESLint.
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
