@@ -1,8 +1,10 @@
 import type { Invoice } from '~/types'
 
-const WIDTH = 304
-const HEIGHT = 120
-const PAD = 10
+const WIDTH = 640
+const HEIGHT = 160
+/* Headroom so the final point of a rising line is not clipped by the top
+   edge; the baseline sits on the bottom edge, where the axis rule is drawn. */
+const TOP_PAD = 12
 
 export interface MonthChart {
   width: number
@@ -16,6 +18,8 @@ export interface MonthChart {
   calculatedTotal: number
   actualTotal: number
   hasDeviation: boolean
+  /** Length of the month, for the labels under the chart. */
+  days: number
 }
 
 interface MonthTotals {
@@ -58,14 +62,14 @@ function monthTotals(invoices: Invoice[], days: number): MonthTotals {
 
 /** Projects cumulative values onto the SVG box; both lines share one scale. */
 function createProjection(days: number, max: number) {
-  const x = (i: number) => PAD + (i / (days - 1)) * (WIDTH - 2 * PAD)
-  const y = (value: number) => HEIGHT - PAD - (value / max) * (HEIGHT - 2 * PAD)
+  const x = (i: number) => (i / (days - 1)) * WIDTH
+  const y = (value: number) => HEIGHT - (value / max) * (HEIGHT - TOP_PAD)
 
   const line = (values: number[]) =>
     values.map((value, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(value).toFixed(1)}`).join(' ')
 
   const closeToBaseline = (path: string) =>
-    `${path} L${x(days - 1).toFixed(1)} ${HEIGHT - PAD} L${x(0).toFixed(1)} ${HEIGHT - PAD} Z`
+    `${path} L${x(days - 1).toFixed(1)} ${HEIGHT} L${x(0).toFixed(1)} ${HEIGHT} Z`
 
   return { line, closeToBaseline }
 }
@@ -94,5 +98,6 @@ export function buildMonthChart(invoices: Invoice[], year: number, month: number
     calculatedTotal: expected[days - 1] || 0,
     actualTotal: actual[days - 1] || 0,
     hasDeviation,
+    days,
   }
 }

@@ -99,7 +99,7 @@ The whole exchange lives in Rust rather than the web view — [one transaction, 
 | Storage | SQLite via `tauri-plugin-sql`, `sqlx` for transactional writes |
 | HTTP | `reqwest` (rustls) |
 | Android notification | [`tauri-plugin-timer`](https://crates.io/crates/tauri-plugin-timer) — own plugin, Kotlin |
-| Fonts | Manrope + Space Grotesk, self-hosted via Fontsource |
+| Fonts | Onest, Unbounded and JetBrains Mono, self-hosted via Fontsource |
 | Build | Vite 8, TypeScript 6 |
 | Tests | Vitest 5 with `@nuxt/test-utils`, `cargo test` on the Rust side |
 

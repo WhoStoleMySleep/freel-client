@@ -71,7 +71,7 @@ async function submit(): Promise<void> {
   <div v-else class="panel">
     <div class="panel-head">
       <span class="panel-brand">freel</span>
-      <button class="panel-close" :aria-label="t('panel.hide')" @click="getCurrentWindow().hide()">✕</button>
+      <button class="panel-close" :aria-label="t('panel.hide')" @click="getCurrentWindow().hide()">×</button>
     </div>
 
     <div v-if="activeTimer && running" class="panel-timer">
@@ -98,7 +98,9 @@ async function submit(): Promise<void> {
         @blur="lockPanel(false)"
         @keydown.enter="submit"
       >
-      <button class="panel-add-btn" :disabled="!canAdd" @click="submit">+</button>
+      <button class="panel-add-btn" :disabled="!canAdd" :aria-label="t('panel.newTask')" @click="submit">
+        <UiIcon name="plus" :size="16" />
+      </button>
     </div>
     <select v-if="projects.active.length > 1" v-model="projectId" class="panel-select">
       <option v-for="project in projects.active" :key="project.id" :value="project.id">

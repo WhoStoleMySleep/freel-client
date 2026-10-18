@@ -53,7 +53,7 @@ async function confirmDelete(): Promise<void> {
             {{ t('projectForm.remove') }}
           </button>
         </div>
-        <p v-if="project.archived" class="card-note" style="text-align: center">
+        <p v-if="project.archived" class="card-note" style="text-align: center; margin-top: 4px">
           {{ t('projectForm.archivedNote') }}
         </p>
       </template>

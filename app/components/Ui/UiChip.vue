@@ -2,16 +2,17 @@
 defineProps<{
   label: string
   active?: boolean
-  /** Colour of the status square in front of the label. */
+  /** Colour of the marker in front of the label. */
   dotColor?: string
+  /** Statuses are marked with a circle, projects with a square. */
+  round?: boolean
   small?: boolean
-  grow?: boolean
 }>()
 </script>
 
 <template>
-  <button class="chip" :class="{ small, grow, active }">
-    <span v-if="dotColor" class="chip-dot" :style="{ background: dotColor }" />
+  <button class="chip" :class="{ small, active }">
+    <span v-if="dotColor" class="chip-dot" :class="{ round }" :style="{ background: dotColor }" />
     {{ label }}
   </button>
 </template>

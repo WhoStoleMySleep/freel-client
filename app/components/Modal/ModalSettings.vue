@@ -130,18 +130,16 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: t('set
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
     <UiModalHead :title="t('settings.title')" @close="emit('close')" />
-    <div class="stack" style="gap: 16px">
-      <div class="card-box">
-        <div class="card-label" style="margin-bottom: 6px">{{ t('settings.rate') }}</div>
-        <div style="display: flex; align-items: center; gap: 10px">
+    <div class="stack" style="gap: 20px">
+      <div>
+        <span class="field-label">{{ t('settings.rate') }}</span>
+        <div class="rate-row">
           <div style="flex: 1">
             <UiField v-model="rateStr" numeric />
           </div>
-          <span style="font-weight: 700; font-size: 18px; color: var(--dim)">
-            {{ t('settings.ratePerHour', { currency }) }}
-          </span>
+          <span class="rate-suffix">{{ t('settings.ratePerHour', { currency }) }}</span>
         </div>
-        <p class="card-note">{{ t('settings.rateHint') }}</p>
+        <span class="field-hint">{{ t('settings.rateHint') }}</span>
       </div>
 
       <div>
@@ -159,101 +157,109 @@ const doRestore = () => run({ kind: 'import', flash: flashNotice, prefix: t('set
 
       <div>
         <span class="field-label">{{ t('settings.theme') }}</span>
-        <div class="chips">
-          <UiChip
+        <div class="segmented three">
+          <button
             v-for="mode in THEME_MODES"
             :key="mode"
-            :label="t(`theme.${mode}`)"
-            :active="themeMode === mode"
-            grow
+            class="segment"
+            :class="{ active: themeMode === mode }"
             @click="settings.setThemeMode(mode)"
-          />
+          >
+            {{ t(`theme.${mode}`) }}
+          </button>
         </div>
       </div>
 
       <div>
         <span class="field-label">{{ t('settings.language') }}</span>
-        <div class="chips">
-          <UiChip
+        <div class="segmented three">
+          <button
             v-for="mode in LANGUAGES"
             :key="mode"
-            :label="t(`language.${mode}`)"
-            :active="language === mode"
-            grow
+            class="segment"
+            :class="{ active: language === mode }"
             @click="settings.setLanguage(mode)"
-          />
+          >
+            {{ t(`language.${mode}`) }}
+          </button>
         </div>
       </div>
 
-      <div class="card-box">
+      <div class="settings-box">
         <div class="switch-row">
           <div class="switch-text">
-            <div class="card-label">{{ t('settings.compact') }}</div>
-            <p class="card-note" style="margin-top: 4px">{{ t('settings.compactHint') }}</p>
+            <span class="card-label">{{ t('settings.compact') }}</span>
+            <span class="card-note">{{ t('settings.compactHint') }}</span>
           </div>
           <UiSwitch v-model="compact" />
         </div>
-      </div>
 
-      <div class="card-box">
         <div class="switch-row">
           <div class="switch-text">
-            <div class="card-label">{{ t('settings.demo') }}</div>
-            <p class="card-note" style="margin-top: 4px">{{ t('settings.demoHint') }}</p>
+            <span class="card-label">{{ t('settings.demo') }}</span>
+            <span class="card-note">{{ t('settings.demoHint') }}</span>
+            <span v-if="demoMode" class="badge-info">{{ t('settings.demoBadge') }}</span>
           </div>
           <UiSwitch v-model="demo" />
         </div>
-        <div v-if="demoMode" class="badge-info">{{ t('settings.demoBadge') }}</div>
-      </div>
 
-      <div class="card-box">
-        <div class="card-label">{{ t('settings.backup') }}</div>
-        <p class="card-note" style="margin-bottom: 12px">{{ t('settings.backupHint') }}</p>
-        <div class="btn-row">
-          <button class="btn-secondary" :disabled="busy !== null" @click="doBackup">
-            {{ busy === 'export' ? t('settings.backupBusy') : t('settings.backupSave') }}
-          </button>
-          <button class="btn-secondary" :disabled="busy !== null" @click="doRestore">
-            {{ busy === 'import' ? t('settings.restoreBusy') : t('settings.restore') }}
-          </button>
-        </div>
-        <div v-if="notice" class="badge-info">{{ notice }}</div>
-      </div>
-
-      <div class="card-box">
-        <div class="card-label">{{ t('settings.sync') }}</div>
-        <template v-if="sync?.connected">
-          <p class="card-note" style="margin-bottom: 12px">
-            {{ sync.email }} · {{ sync.url }}
-            <br>
-            {{ sync.lastSyncAt
-              ? t('settings.lastSync', { at: sync.lastSyncAt.slice(0, 16).replace('T', ' ') })
-              : t('settings.neverSynced') }}
-          </p>
+        <div class="settings-block">
+          <div class="switch-text">
+            <span class="card-label">{{ t('settings.backup') }}</span>
+            <span class="card-note">{{ t('settings.backupHint') }}</span>
+          </div>
           <div class="btn-row">
-            <button class="btn-secondary" :disabled="busy !== null" @click="doSync">
-              {{ busy === 'sync' ? t('settings.syncBusy') : t('settings.syncNow') }}
+            <button class="btn-secondary" :disabled="busy !== null" @click="doBackup">
+              {{ busy === 'export' ? t('settings.backupBusy') : t('settings.backupSave') }}
             </button>
-            <button class="btn-secondary" :disabled="busy !== null" @click="doLogout">{{ t('settings.disconnect') }}</button>
-          </div>
-        </template>
-        <template v-else>
-          <p class="card-note" style="margin-bottom: 10px">{{ t('settings.syncHint') }}</p>
-          <div class="stack" style="gap: 8px">
-            <UiField v-model="url" :placeholder="t('settings.serverPlaceholder')" />
-            <UiField v-model="email" :placeholder="t('settings.emailPlaceholder')" />
-            <UiField v-model="password" :placeholder="t('settings.passwordPlaceholder')" secure />
-          </div>
-          <div class="btn-row" style="margin-top: 10px">
-            <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doLogin">
-              {{ busy === 'login' ? t('settings.loginBusy') : t('settings.login') }}
-            </button>
-            <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doRegister">
-              {{ busy === 'register' ? t('settings.registerBusy') : t('settings.register') }}
+            <button class="btn-secondary" :disabled="busy !== null" @click="doRestore">
+              {{ busy === 'import' ? t('settings.restoreBusy') : t('settings.restore') }}
             </button>
           </div>
-        </template>
-        <div v-if="syncNotice" class="badge-info">{{ syncNotice }}</div>
+          <div v-if="notice" class="badge-info">{{ notice }}</div>
+        </div>
+
+        <div class="settings-block">
+          <div class="switch-text">
+            <span class="card-label">{{ t('settings.sync') }}</span>
+            <template v-if="sync?.connected">
+              <span class="card-note">
+                {{ sync.email }} · {{ sync.url }}
+                <br>
+                {{ sync.lastSyncAt
+                  ? t('settings.lastSync', { at: sync.lastSyncAt.slice(0, 16).replace('T', ' ') })
+                  : t('settings.neverSynced') }}
+              </span>
+            </template>
+            <span v-else class="card-note">{{ t('settings.syncHint') }}</span>
+          </div>
+          <template v-if="sync?.connected">
+            <div class="btn-row">
+              <button class="btn-secondary" :disabled="busy !== null" @click="doSync">
+                {{ busy === 'sync' ? t('settings.syncBusy') : t('settings.syncNow') }}
+              </button>
+              <button class="btn-secondary" :disabled="busy !== null" @click="doLogout">
+                {{ t('settings.disconnect') }}
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="stack" style="gap: 8px">
+              <UiField v-model="url" :placeholder="t('settings.serverPlaceholder')" />
+              <UiField v-model="email" :placeholder="t('settings.emailPlaceholder')" />
+              <UiField v-model="password" :placeholder="t('settings.passwordPlaceholder')" secure />
+            </div>
+            <div class="btn-row">
+              <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doLogin">
+                {{ busy === 'login' ? t('settings.loginBusy') : t('settings.login') }}
+              </button>
+              <button class="btn-secondary" :disabled="busy !== null || !canAuth" @click="doRegister">
+                {{ busy === 'register' ? t('settings.registerBusy') : t('settings.register') }}
+              </button>
+            </div>
+          </template>
+          <div v-if="syncNotice" class="badge-info">{{ syncNotice }}</div>
+        </div>
       </div>
 
       <button class="btn-secondary" style="width: 100%" @click="emit('replayOnboarding')">

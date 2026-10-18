@@ -8,10 +8,14 @@
  *     scrollbars. A touch laptop gets the wide layout but not the hover
  *     styles, which is the correct pairing.
  * The phone layout is untouched by both.
+ *
+ * The prototype switches at 720px. That width still has to carry a 232px
+ * sidebar and the 40px gutters, which leaves the content under 400px — so the
+ * threshold stays where it was.
  */
 
 :root {
-  --sidebar: 236px;
+  --sidebar: 232px;
 }
 
 /* ---------- wide window ---------- */
@@ -25,38 +29,60 @@
     order: -1;
     width: var(--sidebar);
     flex: none;
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 4px;
-    padding: 20px 14px;
-    background: var(--bg);
+    gap: 2px;
+    padding: 30px 14px;
+    background: var(--side);
     border-top: none;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--line);
   }
   .tab {
-    flex: none;
     flex-direction: row;
     justify-content: flex-start;
-    gap: 11px;
-    padding: 10px 12px;
+    gap: 12px;
+    height: 42px;
+    padding: 0 12px;
     border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 500;
     transition: background 0.15s, color 0.15s;
   }
   .tab.active {
-    background: var(--card);
+    background: var(--surface2);
+    color: var(--ink);
+  }
+  /* The accent pill is the phone's way of marking the open tab; here the row
+     itself is highlighted, so the pill goes back to being plain. */
+  .tab-pill {
+    width: auto;
+    height: auto;
+    background: none;
+    color: inherit;
+  }
+  .tab.active .tab-pill {
+    background: none;
+    color: inherit;
   }
 
   .sidebar-brand {
-    display: block;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    font-family: 'Unbounded', system-ui, sans-serif;
     font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.8px;
-    color: var(--text);
-    padding: 4px 12px 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    padding: 0 12px 28px;
+  }
+  .brand-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-text);
   }
 
   /* Content is centred in a readable column rather than stretched across a
@@ -67,7 +93,58 @@
      Padding leaves out-of-flow elements alone. The percentage resolves against
      .app, so the sidebar has to be subtracted. */
   .app .screen {
-    padding: 26px max(34px, calc((100% - var(--sidebar) - 900px) / 2)) 36px;
+    padding: 40px max(40px, calc((100% - var(--sidebar) - 880px) / 2)) 96px;
+  }
+
+  .h1 {
+    font-size: 26px;
+  }
+
+  /* The month figures move from under the headline to beside it. */
+  .hero {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+  .hero-main {
+    padding: 28px 30px;
+  }
+  .hero-total {
+    font-size: 54px;
+  }
+  .hero-total .sym {
+    font-size: 40px;
+  }
+  .hero-side {
+    border-top: none;
+    border-left: 1px solid var(--line);
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+  .hero-cell {
+    padding: 22px 24px;
+  }
+  .hero-cell + .hero-cell {
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+
+  /* Today's three figures fit on one line next to their label. */
+  .today {
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  }
+  .today-label {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 20px;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+  }
+  .today-stat {
+    padding: 14px 20px;
+  }
+
+  .project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 
   /* Sheets become centred dialogs — sliding up from the bottom edge of a
@@ -75,24 +152,32 @@
   .backdrop {
     align-items: center;
     justify-content: center;
+    padding: 24px;
   }
   .sheet {
-    width: min(580px, 92vw);
-    max-height: 86vh;
-    border-radius: 20px;
-    border: 1px solid var(--border2);
-    padding-top: 18px;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.55);
+    width: min(620px, 100%);
+    max-height: 88vh;
+    border-radius: 24px;
     animation: pop 0.22s ease;
   }
   .sheet-body {
-    padding: 4px 24px 24px;
+    padding: 26px;
+  }
+  .sticky-foot {
+    bottom: -26px;
+    margin-bottom: -26px;
+    padding-bottom: 26px;
   }
 
   /* No tab bar to clear any more, so it sits in the window corner. */
   .fab {
-    right: 34px;
-    bottom: 30px;
+    right: 32px;
+    bottom: 32px;
+  }
+
+  /* The status pill only fits beside a report line on a wide screen. */
+  .report-row .status-badge {
+    display: inline-flex;
   }
 
   .onb {
@@ -124,7 +209,7 @@
   .tabbar,
   .tab,
   .group-head,
-  .section-head {
+  .today-label {
     user-select: none;
     -webkit-user-select: none;
   }
@@ -132,32 +217,54 @@
   .icon-btn:hover,
   .done-btn:hover,
   .step-btn:hover,
-  .timer-btn:hover,
+  .nav-btn:hover,
+  .modal-close:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .timer-btn:hover {
+    color: var(--ink);
+    background: var(--line-strong);
+  }
+  .task.running .step-btn:hover {
+    background: rgba(0, 0, 0, 0.16);
+    border-color: transparent;
+    color: inherit;
+  }
+  .task.running .timer-btn:hover {
+    background: var(--accent-ink);
+    color: var(--accent);
+  }
   .chip:hover,
   .btn-secondary:hover,
-  .modal-close:hover,
-  .gen-btn:hover,
-  .nav-btn:hover,
   .plus-btn:hover,
   .onb-skip:hover {
     background-image: linear-gradient(var(--hover), var(--hover));
-    border-color: var(--border2);
+    border-color: var(--line-strong);
   }
   .btn-primary:hover,
   .add-btn:hover,
   .fab:hover,
+  .gen-btn:hover,
   .onb-next:hover {
-    opacity: 0.88;
+    filter: brightness(1.06);
   }
   .task:hover,
-  .project-row:hover,
-  .invoice-row:hover,
+  .project-card:hover,
   .done-card:hover,
+  .gen-btn.ghost:hover,
+  .master-row:hover {
+    border-color: var(--line-strong);
+  }
+  .task.running:hover {
+    border-color: transparent;
+  }
+  .invoice-row:hover,
   .gen-task:hover {
-    border-color: var(--border2);
+    background: var(--surface2);
   }
   .tab:hover {
-    color: var(--text);
+    color: var(--ink);
   }
   .delete-link:hover {
     text-decoration: underline;
@@ -168,7 +275,7 @@
   .scr,
   .sheet-body {
     scrollbar-width: thin;
-    scrollbar-color: var(--border2) transparent;
+    scrollbar-color: var(--line-strong) transparent;
   }
   .scr::-webkit-scrollbar,
   .sheet-body::-webkit-scrollbar {
@@ -176,20 +283,20 @@
   }
   .scr::-webkit-scrollbar-thumb,
   .sheet-body::-webkit-scrollbar-thumb {
-    background: var(--border2);
+    background: var(--line-strong);
     border-radius: 6px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
   .scr::-webkit-scrollbar-thumb:hover,
   .sheet-body::-webkit-scrollbar-thumb:hover {
-    background: var(--mute);
+    background: var(--ink3);
     background-clip: content-box;
   }
 
   /* Keyboard focus has to be visible once there is a Tab key. */
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-text);
     outline-offset: 2px;
     border-radius: 8px;
   }

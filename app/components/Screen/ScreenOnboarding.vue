@@ -33,19 +33,19 @@ async function finish(): Promise<void> {
       <div class="onb-logo">
         <UiLogoMark :size="62" />
       </div>
-      <h1 class="onb-h1">{{ t('onboarding.welcome') }}<br>{{ t('onboarding.welcomeApp') }}</h1>
+      <h1 class="onb-h1 display">{{ t('onboarding.welcome') }}<br>{{ t('onboarding.welcomeApp') }}</h1>
       <p class="onb-p">
         {{ t('onboarding.intro') }}
       </p>
     </div>
 
     <div v-else class="onb-step2">
-      <h2 class="onb-h2">{{ t('onboarding.basics') }}</h2>
+      <h2 class="onb-h2 display">{{ t('onboarding.basics') }}</h2>
       <p class="onb-p2">{{ t('onboarding.basicsHint') }}</p>
 
       <div class="onb-section">
         <div class="onb-label">{{ t('onboarding.currency') }}</div>
-        <div class="chips" style="gap: 8px">
+        <div class="chips">
           <UiChip
             v-for="code in CURRENCIES"
             :key="code"
@@ -63,15 +63,16 @@ async function finish(): Promise<void> {
 
       <div class="onb-section">
         <div class="onb-label">{{ t('onboarding.theme') }}</div>
-        <div class="chips" style="gap: 8px">
-          <UiChip
+        <div class="segmented three">
+          <button
             v-for="mode in THEME_MODES"
             :key="mode"
-            :label="t(`theme.${mode}`)"
-            :active="themeMode === mode"
-            grow
+            class="segment"
+            :class="{ active: themeMode === mode }"
             @click="settings.setThemeMode(mode)"
-          />
+          >
+            {{ t(`theme.${mode}`) }}
+          </button>
         </div>
       </div>
     </div>

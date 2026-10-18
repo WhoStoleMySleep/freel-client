@@ -1,14 +1,6 @@
 <script setup lang="ts">
 type Modal = { type: 'add' } | { type: 'edit', projectId: string } | null
 
-/** Avatar tints, handed out by position so a list reads as distinct rows. */
-const TINTS: [string, string][] = [
-  ['rgba(108,140,255,0.16)', '#8fa6ff'],
-  ['rgba(67,214,160,0.16)', '#43d6a0'],
-  ['rgba(245,196,81,0.16)', '#f5c451'],
-  ['rgba(185,140,255,0.16)', '#b98cff'],
-]
-
 const { t } = useI18n()
 const modal = ref<Modal>(null)
 const { items: projects } = storeToRefs(useProjectsStore())
@@ -22,8 +14,6 @@ const openCounts = computed(() => {
   }
   return counts
 })
-
-const tintOf = (index: number) => TINTS[index % TINTS.length]!
 </script>
 
 <template>
@@ -31,32 +21,40 @@ const tintOf = (index: number) => TINTS[index % TINTS.length]!
     <div class="header">
       <div>
         <div class="eyebrow">{{ t('projects.eyebrow') }}</div>
-        <h1 class="h1">{{ t('projects.title') }}</h1>
+        <h1 class="h1 display">{{ t('projects.title') }}</h1>
       </div>
+      <span class="tasks-count num">{{ t('projects.totalCount', projects.length) }}</span>
     </div>
 
-    <div class="list">
+    <div class="project-grid">
       <button
-        v-for="(project, index) in projects"
+        v-for="project in projects"
         :key="project.id"
-        class="project-row"
+        class="project-card"
         :style="{ opacity: project.archived ? 0.55 : 1 }"
         @click="modal = { type: 'edit', projectId: project.id }"
       >
-        <span class="project-avatar" :style="{ background: tintOf(index)[0], color: tintOf(index)[1] }">
-          {{ project.name[0]?.toUpperCase() }}
+        <span class="project-card-top">
+          <span
+            class="project-avatar"
+            :style="{ background: projectTint(project.id), color: projectColor(project.id) }"
+          >
+            {{ projectLetter(project.name) }}
+          </span>
+          <span
+            class="project-active num"
+            :class="{ any: (openCounts.get(project.id) ?? 0) > 0 }"
+          >
+            {{ t('projects.activeCount', { count: openCounts.get(project.id) ?? 0 }) }}
+          </span>
         </span>
         <span class="project-body">
           <span class="project-name-row">
             <span class="project-name">{{ project.name }}</span>
             <span v-if="project.archived" class="archive-badge">{{ t('projects.archived') }}</span>
           </span>
-          <span class="project-sub">
-            {{ (project.description || t('projects.noDescription'))
-              + ' · ' + t('projects.activeCount', { count: openCounts.get(project.id) ?? 0 }) }}
-          </span>
+          <span class="project-sub">{{ project.description || t('projects.noDescription') }}</span>
         </span>
-        <UiIcon name="chevron-right" :size="16" color="var(--mute)" :stroke-width="2" />
       </button>
     </div>
 
@@ -65,7 +63,9 @@ const tintOf = (index: number) => TINTS[index % TINTS.length]!
       <p class="empty-text">{{ t('projects.emptyHint') }}</p>
     </div>
 
-    <button class="fab" @click="modal = { type: 'add' }">+</button>
+    <button class="fab" :aria-label="t('projectForm.create')" @click="modal = { type: 'add' }">
+      <UiIcon name="plus" :size="22" />
+    </button>
 
     <ModalProjectForm
       :open="modal?.type === 'add' || modal?.type === 'edit'"

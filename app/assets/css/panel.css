@@ -12,12 +12,12 @@ body.panel-window {
   flex-direction: column;
   gap: 10px;
   padding: 14px 14px 12px;
-  background: var(--screen);
-  border: 1px solid var(--border2);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
   /* Square against the screen edge, rounded on the side that shows. */
   border-radius: 0 18px 18px 0;
   border-left: none;
-  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   animation: panel-in 0.18s ease;
 }
@@ -40,19 +40,19 @@ body.panel-window {
   flex: none;
 }
 .panel-brand {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text);
+  font-family: 'Unbounded', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 .panel-close {
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: var(--card);
-  color: var(--dim);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink2);
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -62,24 +62,23 @@ body.panel-window {
 /* ---- running timer ---- */
 .panel-timer {
   flex: none;
-  background: linear-gradient(145deg, #242c44 0%, #161b28 55%, #10131c 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--accent);
+  color: var(--accent-ink);
   border-radius: 16px;
   padding: 12px 13px;
 }
 .panel-timer-title {
   font-size: 12px;
-  font-weight: 700;
-  color: rgba(243, 245, 249, 0.75);
+  font-weight: 600;
+  opacity: 0.72;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .panel-timer-clock {
-  font-size: 26px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.5px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 24px;
+  font-weight: 600;
   margin: 2px 0 10px;
 }
 .panel-timer-btns {
@@ -90,19 +89,18 @@ body.panel-window {
   flex: 1;
   height: 30px;
   border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f3f5f9;
+  background: rgba(0, 0, 0, 0.09);
+  color: inherit;
   font-size: 11.5px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
 .panel-btn.danger {
-  border-color: rgba(255, 122, 122, 0.4);
-  color: var(--danger);
+  background: var(--accent-ink);
+  color: var(--accent);
 }
 .panel-btn svg {
   flex: none;
@@ -120,15 +118,15 @@ body.panel-window {
   height: 34px;
   padding: 0 11px;
   border-radius: 10px;
-  border: 1px solid var(--border2);
-  background: var(--card);
-  color: var(--text);
+  border: 1px solid var(--line);
+  background: var(--surface2);
+  color: var(--ink);
   font-family: inherit;
   font-size: 13px;
   outline: none;
 }
 .panel-input:focus {
-  border-color: var(--accent);
+  border-color: var(--line-strong);
 }
 .panel-add-btn {
   width: 34px;
@@ -136,9 +134,10 @@ body.panel-window {
   flex: none;
   border-radius: 10px;
   background: var(--accent);
-  color: #fff;
-  font-size: 19px;
-  line-height: 1;
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .panel-add-btn:disabled {
   opacity: 0.4;
@@ -147,9 +146,9 @@ body.panel-window {
   flex: none;
   height: 30px;
   border-radius: 9px;
-  border: 1px solid var(--border2);
-  background: var(--card);
-  color: var(--dim);
+  border: 1px solid var(--line);
+  background: var(--surface2);
+  color: var(--ink2);
   font-family: inherit;
   font-size: 12px;
   padding: 0 8px;
@@ -176,30 +175,34 @@ body.panel-window {
 }
 .panel-group-label {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 600;
+  color: var(--ink);
 }
 .panel-group-count {
   font-size: 10px;
-  color: var(--mute);
-  font-weight: 600;
+  color: var(--ink3);
 }
 .panel-dot {
   width: 7px;
   height: 7px;
-  border-radius: 3px;
+  border-radius: 50%;
   flex: none;
 }
 
 .panel-task {
   padding: 9px 10px 8px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.panel-task.running .panel-task-meta {
+  color: inherit;
+  opacity: 0.72;
 }
 .panel-task.running {
-  border-color: rgba(67, 214, 160, 0.4);
-  background: rgba(67, 214, 160, 0.1);
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 .panel-task-top {
   display: flex;
@@ -211,20 +214,17 @@ body.panel-window {
   flex: 1;
   min-width: 0;
   font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.25;
+  font-weight: 600;
+  line-height: 1.3;
 }
 .panel-task-amount {
   font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 600;
   white-space: nowrap;
 }
 .panel-task-meta {
   font-size: 10.5px;
-  color: var(--dim);
-  font-weight: 600;
+  color: var(--ink2);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -241,9 +241,9 @@ body.panel-window {
   height: 26px;
   flex: none;
   border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: var(--card2);
-  color: var(--dim);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,20 +253,24 @@ body.panel-window {
   min-width: 0;
   height: 26px;
   border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: var(--card2);
-  color: var(--dim);
+  background: var(--surface2);
+  color: var(--ink2);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
 }
+.panel-task.running .panel-step {
+  border-color: transparent;
+  background: rgba(0, 0, 0, 0.09);
+  color: inherit;
+}
 .panel-timer-btn.running {
-  border-color: rgba(67, 214, 160, 0.4);
-  background: rgba(67, 214, 160, 0.14);
-  color: var(--success);
+  background: var(--accent-ink);
+  color: var(--accent);
+  font-weight: 600;
 }
 .panel-step svg,
 .panel-timer-btn svg {
@@ -277,5 +281,5 @@ body.panel-window {
   padding: 24px 8px;
   text-align: center;
   font-size: 12px;
-  color: var(--mute);
+  color: var(--ink3);
 }
