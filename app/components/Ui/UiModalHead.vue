@@ -7,7 +7,7 @@ const { t } = useI18n()
 
 <template>
   <div class="modal-head">
-    <div class="modal-title">{{ title }}</div>
-    <button class="modal-close" :aria-label="t('common.close')" @click="emit('close')">✕</button>
+    <h3 class="modal-title display">{{ title }}</h3>
+    <button class="modal-close" :aria-label="t('common.close')" @click="emit('close')">×</button>
   </div>
 </template>

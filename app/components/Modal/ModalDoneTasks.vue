@@ -23,21 +23,30 @@ async function confirmDelete(id: string, title: string): Promise<void> {
     <div class="list">
       <div v-for="task in doneTasks" :key="task.id" class="done-card">
         <div class="done-top">
-          <div class="done-title">{{ task.title }}</div>
-          <div class="done-title num">{{ fmt.money(taskAmount(task, task.minutes), currency) }}</div>
+          <div class="done-body">
+            <span class="done-title">{{ task.title }}</span>
+            <span class="done-meta">
+              <span class="task-project">
+                <span class="task-project-dot" :style="{ background: projectColor(task.projectId) }" />
+                {{ projects.nameOf(task.projectId) }}
+              </span>
+              <span class="task-time num">
+                <UiIcon name="clock" :size="12" /> {{ fmt.minutes(task.minutes) }}
+              </span>
+            </span>
+          </div>
+          <div class="done-side">
+            <span class="done-amount num">{{ fmt.money(taskAmount(task, task.minutes), currency) }}</span>
+            <button class="delete-link" @click="confirmDelete(task.id, task.title)">{{ t('common.delete') }}</button>
+          </div>
         </div>
-        <div class="done-meta">
-          <span>{{ projects.nameOf(task.projectId) }} ·</span>
-          <UiIcon name="clock" :size="11" />
-          <span>{{ fmt.minutes(task.minutes) }}</span>
-          <button class="delete-link" @click="confirmDelete(task.id, task.title)">{{ t('common.delete') }}</button>
-        </div>
-        <div class="chips">
+        <div class="chips scroll">
           <UiChip
             v-for="key in RESTORE_ORDER"
             :key="key"
             :label="t(`status.${key}`)"
             :dot-color="STATUS_COLOR[key]"
+            round
             small
             @click="tasks.setStatus(task.id, key)"
           />

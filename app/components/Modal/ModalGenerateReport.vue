@@ -90,71 +90,91 @@ async function copy(): Promise<void> {
       {{ t('report.hintStatuses') }}
     </p>
 
-    <div class="field-label">{{ t('report.lineLabel') }}</div>
-    <div class="chips" style="gap: 5px; margin-bottom: 14px">
-      <UiChip :label="t('report.modeLink')" :active="mode === 'link'" small @click="mode = 'link'" />
-      <UiChip :label="t('report.modeHours')" :active="mode === 'hours'" small @click="mode = 'hours'" />
+    <div style="margin-bottom: 16px">
+      <span class="field-label">{{ t('report.lineLabel') }}</span>
+      <div class="segmented two" style="max-width: 280px">
+        <button class="segment" :class="{ active: mode === 'link' }" @click="mode = 'link'">
+          {{ t('report.modeLink') }}
+        </button>
+        <button class="segment" :class="{ active: mode === 'hours' }" @click="mode = 'hours'">
+          {{ t('report.modeHours') }}
+        </button>
+      </div>
     </div>
 
-    <div class="field-label">{{ t('report.statuses') }}</div>
-    <div class="chips" style="gap: 5px; margin-bottom: 14px">
-      <UiChip
-        v-for="key in DASH_ORDER"
-        :key="key"
-        :label="t(`status.${key}`)"
-        :dot-color="STATUS_COLOR[key]"
-        :active="statuses.includes(key)"
-        small
-        @click="toggleStatus(key)"
-      />
+    <div style="margin-bottom: 16px">
+      <span class="field-label">{{ t('report.statuses') }}</span>
+      <div class="chips">
+        <UiChip
+          v-for="key in DASH_ORDER"
+          :key="key"
+          :label="t(`status.${key}`)"
+          :dot-color="STATUS_COLOR[key]"
+          :active="statuses.includes(key)"
+          round
+          @click="toggleStatus(key)"
+        />
+      </div>
     </div>
 
-    <div class="field-label">{{ t('report.project') }}</div>
-    <div class="chips" style="gap: 5px; margin-bottom: 12px">
-      <UiChip :label="t('common.all')" :active="filterProjectId === ''" small @click="filterProjectId = ''" />
-      <UiChip
-        v-for="project in projects.active"
-        :key="project.id"
-        :label="project.name"
-        :active="filterProjectId === project.id"
-        small
-        @click="filterProjectId = project.id"
-      />
+    <div style="margin-bottom: 16px">
+      <span class="field-label">{{ t('report.project') }}</span>
+      <div class="chips scroll">
+        <UiChip :label="t('common.all')" :active="filterProjectId === ''" @click="filterProjectId = ''" />
+        <UiChip
+          v-for="project in projects.active"
+          :key="project.id"
+          :label="project.name"
+          :dot-color="projectColor(project.id)"
+          :active="filterProjectId === project.id"
+          @click="filterProjectId = project.id"
+        />
+      </div>
     </div>
 
-    <UiTaskPicker
-      :groups="groups"
-      :master="master"
-      :empty-text="t('report.empty')"
-      @toggle="setMany"
-    >
-      <template #meta="{ task }">
-        <span class="gen-task-link" :class="{ missing: !hasDetail(task.minutes, task.link) }">
-          <UiIcon :name="mode === 'hours' ? 'clock' : 'link'" :size="10" />
-          {{ rowDetail(task.minutes, task.link) }}
+    <div class="report-row">
+      <UiTaskPicker
+        :groups="groups"
+        :master="master"
+        :empty-text="t('report.empty')"
+        @toggle="setMany"
+      >
+        <template #meta="{ task }">
+          <span class="gen-task-link num" :class="{ missing: !hasDetail(task.minutes, task.link) }">
+            <UiIcon :name="mode === 'hours' ? 'clock' : 'link'" :size="12" />
+            {{ rowDetail(task.minutes, task.link) }}
+          </span>
+        </template>
+        <template #trailing="{ task }">
+          <span
+            class="status-badge"
+            :style="{
+              background: `color-mix(in oklch, ${STATUS_COLOR[task.status]} 15%, transparent)`,
+              color: STATUS_COLOR[task.status],
+            }"
+          >
+            {{ t(`status.${task.status}`) }}
+          </span>
+        </template>
+      </UiTaskPicker>
+    </div>
+
+    <div v-if="chosen.length" style="margin-top: 16px">
+      <span class="field-label">{{ t('report.preview') }}</span>
+      <pre class="report-preview">{{ text }}</pre>
+    </div>
+
+    <div class="sticky-foot">
+      <div class="sel-summary">
+        <span class="sel-count">{{ t('common.selected', { count: chosen.length }) }}</span>
+        <span v-if="incomplete" class="sel-warn">
+          {{ mode === 'hours' ? t('report.missingHours') : t('report.missingLink') }}: {{ incomplete }}
         </span>
-      </template>
-      <template #trailing="{ task }">
-        <span
-          class="status-badge"
-          :style="{ background: STATUS_COLOR[task.status] + '22', color: STATUS_COLOR[task.status] }"
-        >
-          {{ t(`status.${task.status}`) }}
-        </span>
-      </template>
-    </UiTaskPicker>
-
-    <div class="sel-summary">
-      <span class="sel-count">{{ t('common.selected', { count: chosen.length }) }}</span>
-      <span v-if="incomplete" class="sel-warn">
-        {{ mode === 'hours' ? t('report.missingHours') : t('report.missingLink') }}: {{ incomplete }}
-      </span>
+      </div>
+      <button class="btn-primary" :disabled="!chosen.length" @click="copy">
+        <UiIcon name="copy" :size="16" />
+        {{ copied ? t('common.copied') : t('report.copy') }}
+      </button>
     </div>
-
-    <pre v-if="chosen.length" class="report-preview">{{ text }}</pre>
-
-    <button class="btn-primary" style="margin-top: 12px" :disabled="!chosen.length" @click="copy">
-      {{ copied ? t('common.copied') : t('report.copy') }}
-    </button>
   </UiBottomSheet>
 </template>

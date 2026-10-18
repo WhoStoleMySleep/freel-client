@@ -52,54 +52,63 @@ async function confirmDelete(): Promise<void> {
 <template>
   <UiBottomSheet :open="open" @close="emit('close')">
     <template v-if="invoice">
-      <UiModalHead :title="t('invoiceDetail.title', { number: invoice.number })" @close="emit('close')" />
-      <p class="modal-hint" style="margin-top: -10px">
-        {{ invoice.projectName }} · {{ fmt.shortDate(invoice.dayKey) }}
-      </p>
+      <div class="modal-head">
+        <div>
+          <h3 class="modal-title num">{{ t('invoiceDetail.title', { number: invoice.number }) }}</h3>
+          <div class="invoice-sub" style="margin-top: 6px">
+            {{ invoice.projectName }} · {{ fmt.shortDate(invoice.dayKey) }}
+          </div>
+        </div>
+        <button class="modal-close" :aria-label="t('common.close')" @click="emit('close')">×</button>
+      </div>
 
-      <div class="list" style="gap: 12px">
+      <div class="inv-sheet">
         <div v-for="group in groups" :key="group.name" class="inv-group">
           <div class="inv-group-head">
+            <span class="chip-dot" :style="{ background: projectColor(group.name) }" />
             <span class="inv-group-name">{{ group.name }}</span>
+            <span class="inv-group-count num">{{ group.items.length }}</span>
             <span class="inv-group-subtotal num">{{ fmt.money(group.subtotal, currency) }}</span>
           </div>
           <div v-for="item in group.items" :key="item.id" class="inv-item">
-            <div style="flex: 1">
-              <div class="inv-item-title">{{ item.title }}</div>
-              <div class="inv-item-hours">
-                <UiIcon name="clock" :size="10" /> {{ fmt.minutes(item.minutes) }}
-              </div>
+            <div class="inv-item-body">
+              <span class="inv-item-title">{{ item.title }}</span>
+              <span class="inv-item-hours num">
+                <UiIcon name="clock" :size="12" /> {{ fmt.minutes(item.minutes) }}
+              </span>
             </div>
-            <div class="inv-item-amount num">{{ fmt.money(item.amount, currency) }}</div>
+            <span class="inv-item-amount num">{{ fmt.money(item.amount, currency) }}</span>
           </div>
         </div>
         <div class="inv-total">
           <span class="inv-total-label">{{ t('invoiceDetail.total') }}</span>
-          <span class="inv-total-value num">{{ fmt.money(invoice.total, currency) }}</span>
+          <span class="inv-total-value display">{{ fmt.money(invoice.total, currency) }}</span>
         </div>
       </div>
 
-      <div class="field-label" style="margin-top: 18px">{{ t('invoiceDetail.statusLabel') }}</div>
-      <div class="chips" style="gap: 7px">
-        <UiChip
-          v-for="key in STATUS_OPTIONS"
-          :key="key"
-          :label="t(`invoiceStatus.${key}`)"
-          :active="status === key"
-          grow
-          small
-          @click="status = key"
-        />
+      <div style="margin-top: 18px">
+        <span class="field-label">{{ t('invoiceDetail.statusLabel') }}</span>
+        <div class="segmented three">
+          <button
+            v-for="key in STATUS_OPTIONS"
+            :key="key"
+            class="segment"
+            :class="{ active: status === key }"
+            @click="status = key"
+          >
+            {{ t(`invoiceStatus.${key}`) }}
+          </button>
+        </div>
       </div>
 
-      <div v-if="status === 'paid'" style="margin-top: 14px">
+      <div v-if="status === 'paid'" style="margin-top: 18px">
         <UiField v-model="factualStr" :label="t('invoiceDetail.factual')" numeric />
-        <p class="card-note">{{ t('invoiceDetail.factualHint') }}</p>
+        <span class="field-hint">{{ t('invoiceDetail.factualHint') }}</span>
       </div>
 
-      <button class="btn-primary" style="margin-top: 16px" @click="save">{{ t('common.save') }}</button>
-      <div class="btn-row" style="margin-top: 9px">
-        <button class="btn-secondary" :style="{ color: copied ? 'var(--success)' : undefined }" @click="copyAsText">
+      <button class="btn-primary" style="margin-top: 18px" @click="save">{{ t('common.save') }}</button>
+      <div class="btn-row" style="margin-top: 8px">
+        <button class="btn-secondary" :style="{ color: copied ? 'var(--green-text)' : undefined }" @click="copyAsText">
           {{ copied ? t('common.copied') : t('invoiceDetail.copy') }}
         </button>
         <button class="btn-secondary danger" @click="confirmDelete">{{ t('invoiceDetail.remove') }}</button>

@@ -69,14 +69,14 @@ watch([ready, minElapsed], () => {
     <ScreenBilling v-else />
 
     <nav class="tabbar">
-      <div class="sidebar-brand">freel</div>
+      <div class="sidebar-brand">freel<span class="brand-dot" /></div>
       <button
         v-for="item in TABS"
         :key="item.key"
         :class="tab === item.key ? 'tab active' : 'tab'"
         @click="tab = item.key"
       >
-        <UiIcon :name="item.icon" />
+        <span class="tab-pill"><UiIcon :name="item.icon" :size="18" /></span>
         {{ t(`tabs.${item.key}`) }}
       </button>
     </nav>

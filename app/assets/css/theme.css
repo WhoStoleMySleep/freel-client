@@ -1,41 +1,48 @@
 /* Tokens copied verbatim from the design prototype. */
-:root {
-  --bg: #0a0b0e;
-  --screen: #0f1116;
-  --card: #171a21;
-  --card2: #1f232c;
-  --raise: #232833;
-  --text: #f3f5f9;
-  --dim: #9aa2b1;
-  --mute: #616a7b;
-  --border: rgba(255, 255, 255, 0.07);
-  --border2: rgba(255, 255, 255, 0.11);
-  --accent: #6c8cff;
-  --gold: #f5c451;
-  --success: #43d6a0;
-  --danger: #ff7a7a;
+:root,
+[data-theme='dark'] {
+  --bg: #121110;
+  --side: #0e0d0c;
+  --surface: #1a1917;
+  --surface2: #232120;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --ink: #f3f0ea;
+  --ink2: #a9a49b;
+  --ink3: #77736b;
+  --amber-text: #f5c76b;
+  --green-text: #6bdb95;
+  --overlay: rgba(5, 5, 4, 0.62);
+  --accent-text: #c9f25c;
   /* Layered as a gradient on hover so it tints any background without
      disturbing the element's own background-color or box-shadow. */
   --hover: rgba(255, 255, 255, 0.06);
 }
 
 [data-theme='light'] {
-  --bg: #e7e9ee;
-  --screen: #f5f6f9;
-  --card: #ffffff;
-  --card2: #f1f3f7;
-  --raise: #ffffff;
-  --text: #10131a;
-  --dim: #5a6273;
-  --mute: #98a0b0;
-  --border: rgba(10, 14, 25, 0.09);
-  --border2: rgba(10, 14, 25, 0.14);
-  /* The prototype injects the accent inline, so it stays the same in both themes. */
-  --accent: #6c8cff;
-  --gold: #c9930a;
-  --success: #1f9f75;
-  --danger: #e0453f;
-  --hover: rgba(10, 14, 25, 0.05);
+  --bg: #f3f1ec;
+  --side: #ece9e3;
+  --surface: #ffffff;
+  --surface2: #f1eee8;
+  --line: rgba(26, 25, 22, 0.09);
+  --line-strong: rgba(26, 25, 22, 0.22);
+  --ink: #1a1916;
+  --ink2: #5e5a52;
+  --ink3: #8e8981;
+  --amber-text: #946000;
+  --green-text: #1d7f46;
+  --overlay: rgba(30, 28, 24, 0.35);
+  --accent-text: #4a750a;
+  --hover: rgba(26, 25, 22, 0.05);
+}
+
+/* The accent block itself does not change with the theme: the lime is bright
+   enough to carry `--accent-ink` on both. Only `--accent-text` above has to
+   darken, because lime on a white surface is unreadable as text. */
+:root {
+  --accent: #c9f25c;
+  --accent-ink: #161b07;
+  --danger: #f0705f;
 }
 
 * {
@@ -51,12 +58,13 @@ body,
 
 body {
   margin: 0;
-  font-family: 'Manrope', system-ui, sans-serif;
-  background: var(--screen);
-  color: var(--text);
+  font-family: 'Onest', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
   overscroll-behavior: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 button {
@@ -67,8 +75,18 @@ button {
   color: inherit;
 }
 
+/* Figures, timers and identifiers — anything that should not reflow as its
+   digits change. */
 .num {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Headings and the few numbers large enough to read as display type. */
+.display {
+  font-family: 'Unbounded', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .scr {
@@ -106,16 +124,5 @@ button {
   }
   100% {
     background-position: 180% 0;
-  }
-}
-@keyframes ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(67, 214, 160, 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(67, 214, 160, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(67, 214, 160, 0);
   }
 }

@@ -133,15 +133,16 @@ async function confirmDelete(): Promise<void> {
       <template v-if="!compact">
         <div>
           <span class="field-label">{{ t('taskForm.rateTypeLabel') }}</span>
-          <div class="chips">
-            <UiChip
+          <div class="segmented two">
+            <button
               v-for="option in RATE_OPTIONS"
               :key="option"
-              :label="t(`rateType.${option}`)"
-              :active="rateType === option"
-              grow
+              class="segment"
+              :class="{ active: rateType === option }"
               @click="rateType = option"
-            />
+            >
+              {{ t(`rateType.${option}`) }}
+            </button>
           </div>
         </div>
 
@@ -150,10 +151,12 @@ async function confirmDelete(): Promise<void> {
         <div class="time-box">
           <div class="time-top">
             <div>
-              <div class="card-label">{{ t('taskForm.worked') }}</div>
+              <div class="time-label">{{ t('taskForm.worked') }}</div>
               <div class="time-value num">{{ fmt.minutes(task?.minutes ?? 0) }}</div>
             </div>
-            <button class="plus-btn" @click="showAddTime = !showAddTime">+</button>
+            <button class="plus-btn" :aria-label="t('taskForm.add')" @click="showAddTime = !showAddTime">
+              <UiIcon name="plus" :size="16" />
+            </button>
           </div>
           <div v-if="showAddTime" class="time-add">
             <label>
@@ -164,7 +167,7 @@ async function confirmDelete(): Promise<void> {
               <span class="mini-label">{{ t('taskForm.minutes') }}</span>
               <UiField v-model="addMinutes" placeholder="0" numeric />
             </label>
-            <button class="btn-primary" style="margin: 0; width: auto; padding: 13px 14px" @click="commitAddTime">
+            <button class="btn-primary" style="width: auto; height: 44px; padding: 0 16px" @click="commitAddTime">
               {{ t('taskForm.add') }}
             </button>
           </div>
@@ -179,7 +182,7 @@ async function confirmDelete(): Promise<void> {
               :label="t(`status.${key}`)"
               :dot-color="STATUS_COLOR[key]"
               :active="status === key"
-              small
+              round
               @click="status = key"
             />
           </div>
