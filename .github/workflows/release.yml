@@ -69,7 +69,7 @@ jobs:
       # По умолчанию Tauri делает все форматы разом: под Linux к deb добавился
       # бы AppImage, который тащит в себе webkit2gtk и весит вдесятеро больше,
       # под Windows — ещё и msi. Один формат на систему, остальные не нужны.
-      - uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
